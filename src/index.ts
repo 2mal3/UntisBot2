@@ -114,6 +114,13 @@ bot.on("ready", async () => {
   const timetable = await get_timetable();
   const nice_timetable = format_timetable(timetable);
 
+  // Create timetable.json if it doesn't exist
+  if (! await Bun.file("timetable.json").exists()) {
+    console.log("timetable.json doesn't exist, creating it ...")
+    Bun.write("timetable.json", JSON.stringify(nice_timetable));
+    process.exit(0);
+  }
+
   const old_timetable = JSON.parse(await Bun.file("timetable.json").text());
   Bun.write("timetable.json", JSON.stringify(nice_timetable));
 
