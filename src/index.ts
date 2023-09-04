@@ -35,7 +35,7 @@ function create_date_from_untis_date(
 
 async function get_timetable(): Promise<WebAPITimetable[]> {
   console.log(
-    "Logging in with:",
+    "Logging into Untis with:",
     process.env.SCHOOL_NAME,
     process.env.UNTIS_USERNAME,
     process.env.UNTIS_SERVER
@@ -108,7 +108,6 @@ async function send_cancelled_lessons(cancelled_lessons: Lesson[]) {
 bot.on("ready", async () => {
   console.log("Bot connected!");
   const channel = bot.channels.cache.get(process.env.CHANNEL_ID ?? "");
-  await (channel as TextChannel)?.send("hi");
 
   console.log("Getting Timetable ...")
   const timetable = await get_timetable();
