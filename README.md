@@ -10,3 +10,8 @@ A Discord bot that uses your school's WebUntis API to automatically notify you o
 - `UNTIS_SERVER` : the internet address of the WebUntis server (e. g. cissa.webuntis.com)
 - `DISCORD_TOKEN`: the auth token for the discord bot that should send the notifications
 - `CHANNEL_ID`: the id of the Discord channel to which the notifications should be sent
+
+## Libraries Used
+
+- [discord.js](https://www.npmjs.com/package/discord.js): interaction with the Discord API
+- [webuntis](https://www.npmjs.com/package/webuntis): interaction with the WebUntis API
