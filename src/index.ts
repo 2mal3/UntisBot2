@@ -38,7 +38,6 @@ async function get_timetable(): Promise<WebAPITimetable[]> {
     "Logging in with:",
     process.env.SCHOOL_NAME,
     process.env.UNTIS_USERNAME,
-    process.env.UNTIS_PASSWORD,
     process.env.UNTIS_SERVER
   );
   const untis = new WebUntis(
@@ -111,6 +110,7 @@ bot.on("ready", async () => {
   const channel = bot.channels.cache.get(process.env.CHANNEL_ID ?? "");
   await (channel as TextChannel)?.send("hi");
 
+  console.log("Getting Timetable ...")
   const timetable = await get_timetable();
   const nice_timetable = format_timetable(timetable);
 
@@ -126,4 +126,5 @@ bot.on("ready", async () => {
   process.exit(0);
 });
 
+console.log("Starting Bot ...")
 bot.login(process.env.DISCORD_TOKEN);
