@@ -28,7 +28,7 @@ FROM final as app
 WORKDIR /app
 
 COPY package.json bun.lockb ./
-RUN bun install
+RUN /usr/local/bin/bun install
 
 RUN apt-get update && apt-get install -y cron
 RUN touch /var/log/cron.log
