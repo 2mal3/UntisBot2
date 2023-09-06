@@ -22,4 +22,4 @@ COPY docker/entrypoint.sh .
 RUN chmod +x task.sh
 RUN chmod +x entrypoint.sh
 
-CMD ["docker/entrypoint.sh"]
+ENTRYPOINT ["./entrypoint.sh"]
