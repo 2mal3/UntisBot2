@@ -34,12 +34,12 @@ function create_date_from_untis_date(
 }
 
 async function get_timetable(): Promise<WebAPITimetable[]> {
-  console.log(
-    "Logging into Untis with:",
-    process.env.SCHOOL_NAME,
-    process.env.UNTIS_USERNAME,
-    process.env.UNTIS_SERVER
-  );
+  // console.log(
+  //   "Logging into Untis with:",
+  //   process.env.SCHOOL_NAME,
+  //   process.env.UNTIS_USERNAME,
+  //   process.env.UNTIS_SERVER
+  // );
   const untis = new WebUntis(
     process.env.SCHOOL_NAME ?? "",
     process.env.UNTIS_USERNAME ?? "",
@@ -109,8 +109,8 @@ bot.on("ready", async () => {
   console.log("Bot connected!");
   const channel = bot.channels.cache.get(process.env.CHANNEL_ID ?? "");
 
-  console.log("Getting Timetable ...")
   const timetable = await get_timetable();
+  console.log("Got timetable!");
   const nice_timetable = format_timetable(timetable);
 
   // Create timetable.json if it doesn't exist
@@ -129,8 +129,9 @@ bot.on("ready", async () => {
   );
   await send_cancelled_lessons(cancelled_lessons);
 
+  console.log("Done!")
   process.exit(0);
 });
 
-console.log("Starting Bot ...")
+console.log("Starting ...")
 bot.login(process.env.DISCORD_TOKEN);
