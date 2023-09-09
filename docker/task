@@ -1,5 +1,5 @@
 # Faster clock speed in the morning
-* 7 * * 0-5 /app/task.sh >> /var/log/cron.log 2>&1
+*/2 7 * * 0-5 /app/task.sh >> /var/log/cron.log 2>&1
 
 # Slower in the rest of the school day
-*/15 8-13 * * 0-5 /app/task.sh >> /var/log/cron.log 2>&1
+# */15 8-13 * * 0-5 /app/task.sh >> /var/log/cron.log 2>&1
