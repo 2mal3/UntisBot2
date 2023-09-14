@@ -55,16 +55,24 @@ async function get_timetable(): Promise<WebAPITimetable[]> {
 }
 
 function format_timetable(timetable: WebAPITimetable[]): Lesson[] {
-  return timetable.map((lesson) => {
-    const nice_lessons: Lesson = {
+  let nice_timetable: Lesson[] = [];
+
+  for (const lesson of timetable) {
+    let nice_lesson: Lesson = {
       id: lesson.id,
       name: lesson.subjects[0].element.longName ?? "missingno",
       date: create_date_from_untis_date(lesson.date, lesson.startTime),
-      // Ignore this error, it's a bug in the typings
-      cancelled: lesson.is.cancelled ?? false,
+      cancelled: false,
     };
-    return nice_lessons;
-  });
+    // Ignore this error, it's a bug in the typings
+    if ((lesson.is.cancelled ?? false) || (lesson.teachers[0].element.name === "---")) {
+      nice_lesson.cancelled = true;
+    }
+
+    nice_timetable.push(nice_lesson);
+  }
+
+  return nice_timetable;
 }
 
 // Loops thought the timetable by index and prints out every lesson where the cancelled status has changed
