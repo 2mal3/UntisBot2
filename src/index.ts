@@ -107,8 +107,15 @@ async function send_cancelled_lessons(cancelled_lessons: Lesson[]) {
 
 bot.on("ready", async () => {
   console.log("Bot connected!");
-  const channel = bot.channels.cache.get(process.env.CHANNEL_ID ?? "");
 
+  // const channel = bot.channels.cache.get(process.env.CHANNEL_ID ?? "");
+  const cancelled_lessons = await main();
+  await send_cancelled_lessons(cancelled_lessons);
+
+  process.exit(0);
+});
+
+async function main() {
   const timetable = await get_timetable();
   console.log("Got timetable!");
   const nice_timetable = format_timetable(timetable);
@@ -127,11 +134,10 @@ bot.on("ready", async () => {
     nice_timetable,
     old_timetable
   );
-  await send_cancelled_lessons(cancelled_lessons);
 
   console.log("Done!")
-  process.exit(0);
-});
+  return cancelled_lessons;
+}
 
 console.log("Starting ...")
 bot.login(process.env.DISCORD_TOKEN);
