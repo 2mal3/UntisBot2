@@ -9,7 +9,7 @@ import {
   ChatInputCommandInteraction
 } from "discord.js";
 import { log } from "logging";
-import { register_user } from "logic"
+import { register_user as user_login } from "logic"
 
 const bot = new Client({
   intents: [GatewayIntentBits.Guilds],
@@ -23,8 +23,8 @@ async function register_commands() {
       description: "Replies with Pong!",
     },
     {
-      name: "register",
-      description: "Register as a new user",
+      name: "login",
+      description: "Login with your Untis credentials",
       options: [
         {
           name: "username",
@@ -76,27 +76,27 @@ bot.on("interactionCreate", async (interaction) => {
 
   if (interaction.commandName == "ping") {
     await interaction.reply({ content: "Pong!", ephemeral: true });
-  } else if (interaction.commandName == "register") {
-    await on_register_user(interaction)
+  } else if (interaction.commandName == "login") {
+    await on_user_login(interaction)
   }
 });
 
-async function on_register_user(interaction: ChatInputCommandInteraction) {
+async function on_user_login(interaction: ChatInputCommandInteraction) {
   const username = interaction.options.getString("username") ?? "";
   const password = interaction.options.getString("password") ?? "";
   const school_name = interaction.options.getString("school_name") ?? "";
 
-  log.info(`Registering user ${username} for ${school_name}`)
+  log.info(`User "${username}" from "${school_name}" logged in`)
 
   await interaction.deferReply({ ephemeral: true });
 
-  const result = await register_user(username, password, school_name);
+  const result = await user_login(username, password, school_name);
   if (!result.success) {
     log.error(result.message);
     await interaction.editReply(result.message);
     return;
   }
-  await interaction.editReply("Successfully registered user!");
+  await interaction.editReply("Successfully logged in!");
 }
 
 function main() {

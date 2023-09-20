@@ -24,7 +24,7 @@ export async function register_user(
     return {success: false, message: error_message};
   }
 
-  return {success: true, message: "Successfully registered user."};
+  return {success: true, message: ""};
 }
 
 // Get the untis internal school name and the server url
