@@ -1,6 +1,9 @@
+import { PrismaClient } from "@prisma/client"
 import puppeteer from "puppeteer";
 import { WebAPITimetable, WebUntis } from "webuntis";
 import { log } from "logging";
+
+const prisma = new PrismaClient();
 
 export async function register_user(
   username: string,
@@ -23,6 +26,15 @@ export async function register_user(
     const error_message = (error as Error).message;
     return {success: false, message: error_message};
   }
+
+  await prisma.user.create({
+    data: {
+      untis_school_name: school.school_name,
+      untis_username: username,
+      untis_password: password,
+      untis_server: school.untis_server,
+    }
+  })
 
   return {success: true, message: ""};
 }

@@ -97,6 +97,7 @@ async function on_user_login(interaction: ChatInputCommandInteraction) {
     return;
   }
   await interaction.editReply("Successfully logged in!");
+  log.info("Successfully logged in!");
 }
 
 function main() {
