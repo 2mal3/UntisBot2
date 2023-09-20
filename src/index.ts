@@ -1,4 +1,3 @@
-import { Logger, ILogObj } from "tslog";
 import { CronJob } from "cron";
 import {
   Client,
@@ -8,10 +7,7 @@ import {
   TextChannel,
   Routes,
 } from "discord.js";
-
-const log: Logger<ILogObj> = new Logger({
-  prettyLogTemplate: "{{yyyy}}.{{mm}}.{{dd}} {{hh}}:{{MM}}:{{ss}}:{{ms}}\t{{logLevelName}}\t",
-});
+import { log } from "logging";
 
 const bot = new Client({
   intents: [GatewayIntentBits.Guilds],
