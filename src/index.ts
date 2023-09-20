@@ -6,8 +6,10 @@ import {
   Partials,
   TextChannel,
   Routes,
+  ChatInputCommandInteraction
 } from "discord.js";
 import { log } from "logging";
+import { register_user } from "logic"
 
 const bot = new Client({
   intents: [GatewayIntentBits.Guilds],
@@ -19,6 +21,30 @@ async function register_commands() {
     {
       name: "ping",
       description: "Replies with Pong!",
+    },
+    {
+      name: "register",
+      description: "Register as a new user",
+      options: [
+        {
+          name: "username",
+          description: "Your Untis username",
+          required: true,
+          type: 3,
+        },
+        {
+          name: "password",
+          description: "Your Untis password",
+          required: true,
+          type: 3,
+        },
+        {
+          name: "school_name",
+          description: "Your school name",
+          required: true,
+          type: 3,
+        },
+      ],
     },
   ];
 
@@ -48,14 +74,27 @@ bot.on("interactionCreate", async (interaction) => {
   if (!interaction.isChatInputCommand()) return;
 
   if (interaction.commandName == "ping") {
-    await interaction.reply("Pong!");
+    await interaction.reply({ content: "Pong!", ephemeral: true });
+  } else if (interaction.commandName == "register") {
+    await on_register_user(interaction)
   }
 });
+
+async function on_register_user(interaction: ChatInputCommandInteraction) {
+  const username = interaction.options.getString("username") ?? "";
+  const password = interaction.options.getString("password") ?? "";
+  const school_name = interaction.options.getString("school_name") ?? "";
+
+  const succes = await register_user(username, password, school_name);
+}
 
 function main() {
   log.info("Hi");
 }
 
+log.info("Starting ...");
+
 await register_commands();
 bot.login(process.env.DISCORD_TOKEN);
+
 const job = new CronJob("* * * * *", main, null, true, Bun.env.TZ);
