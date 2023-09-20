@@ -1,4 +1,4 @@
-import { PrismaClient } from "@prisma/client"
+import { PrismaClient } from "@prisma/client";
 import puppeteer from "puppeteer";
 import { WebAPITimetable, WebUntis } from "webuntis";
 import { log } from "logging";
@@ -20,7 +20,7 @@ export async function register_user(
     username,
     password,
     school.untis_server
-  )
+  );
 
   // Check if the credentials are correct
   try {
@@ -28,7 +28,7 @@ export async function register_user(
     await untis.logout();
   } catch (error) {
     const error_message = (error as Error).message;
-    return {success: false, message: error_message};
+    return { success: false, message: error_message };
   }
 
   await prisma.user.create({
@@ -37,10 +37,10 @@ export async function register_user(
       untis_username: username,
       untis_password: password,
       untis_server: school.untis_server,
-    }
-  })
+    },
+  });
 
-  return {success: true, message: ""};
+  return { success: true, message: "" };
 }
 
 // Get the untis internal school name and the server url
@@ -48,7 +48,7 @@ export async function register_user(
 async function get_school_from_name(
   name: string
 ): Promise<{ school_name: string; untis_server: string }> {
-  log.debug(`Getting school from name: ${name} ...`)
+  log.debug(`Getting school from name: ${name} ...`);
 
   const browser = await puppeteer.launch({ headless: "new" });
   const page = await browser.newPage();
@@ -68,6 +68,6 @@ async function get_school_from_name(
 
   await browser.close();
 
-  log.debug(`Done! School name is ${school_name}`)
+  log.debug(`Done! School name is ${school_name}`);
   return { school_name: school_name, untis_server: untis_sever };
 }
