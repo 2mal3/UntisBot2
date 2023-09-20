@@ -43,6 +43,7 @@ async function register_commands() {
           description: "Your school name",
           required: true,
           type: 3,
+          min_length: 3,
         },
       ],
     },
@@ -85,7 +86,17 @@ async function on_register_user(interaction: ChatInputCommandInteraction) {
   const password = interaction.options.getString("password") ?? "";
   const school_name = interaction.options.getString("school_name") ?? "";
 
-  const succes = await register_user(username, password, school_name);
+  log.info(`Registering user ${username} for ${school_name}`)
+
+  await interaction.deferReply({ ephemeral: true });
+
+  const result = await register_user(username, password, school_name);
+  if (!result.success) {
+    log.error(result.message);
+    await interaction.editReply(result.message);
+    return;
+  }
+  await interaction.editReply("Successfully registered user!");
 }
 
 function main() {
@@ -97,4 +108,4 @@ log.info("Starting ...");
 await register_commands();
 bot.login(process.env.DISCORD_TOKEN);
 
-const job = new CronJob("* * * * *", main, null, true, Bun.env.TZ);
+// const job = new CronJob("* * * * *", main, null, true, Bun.env.TZ);

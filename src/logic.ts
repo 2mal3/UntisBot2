@@ -6,13 +6,34 @@ export async function register_user(
   username: string,
   password: string,
   school_name: string
-) {
-  log.debug(username, password, school_name);
+): Promise<{success: boolean, message: any}> {
+  const school = await get_school_from_name(school_name);
+  const untis = new WebUntis(
+    school.school_name,
+    username,
+    password,
+    school.untis_server
+  )
+
+  // Check if the credentials are correct
+  try {
+    await untis.login();
+    await untis.logout();
+  } catch (error) {
+    const error_message = (error as Error).message;
+    return {success: false, message: error_message};
+  }
+
+  return {success: true, message: "Successfully registered user."};
 }
 
+// Get the untis internal school name and the server url
+// from the school search on the webuntis website
 async function get_school_from_name(
   name: string
 ): Promise<{ school_name: string; untis_server: string }> {
+  log.debug(`Getting school from name: ${name} ...`)
+
   const browser = await puppeteer.launch({ headless: "new" });
   const page = await browser.newPage();
 
@@ -31,5 +52,6 @@ async function get_school_from_name(
 
   await browser.close();
 
+  log.debug(`Done! School name is ${school_name}`)
   return { school_name: school_name, untis_server: untis_sever };
 }
