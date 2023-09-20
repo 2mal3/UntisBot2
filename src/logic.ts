@@ -9,7 +9,11 @@ export async function register_user(
   username: string,
   password: string,
   school_name: string
-): Promise<{success: boolean, message: any}> {
+): Promise<{ success: boolean; message: any }> {
+  if ((await prisma.user.count({ where: { untis_username: username } })) === 0) {
+    return { success: false, message: "Already logged in" };
+  }
+
   const school = await get_school_from_name(school_name);
   const untis = new WebUntis(
     school.school_name,
