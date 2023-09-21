@@ -1,3 +1,4 @@
+import { PrismaClient } from "@prisma/client";
 import { CronJob } from "cron";
 import {
   Client,
@@ -6,10 +7,13 @@ import {
   Partials,
   TextChannel,
   Routes,
-  ChatInputCommandInteraction
+  ChatInputCommandInteraction,
 } from "discord.js";
 import { log } from "logging";
-import { register_user as user_login } from "logic"
+import { Lesson } from "lesson_type";
+import { user_login, get_cancelled_lessons } from "logic";
+
+const prisma = new PrismaClient();
 
 const bot = new Client({
   intents: [GatewayIntentBits.Guilds],
@@ -77,7 +81,7 @@ bot.on("interactionCreate", async (interaction) => {
   if (interaction.commandName == "ping") {
     await interaction.reply({ content: "Pong!", ephemeral: true });
   } else if (interaction.commandName == "login") {
-    await on_user_login(interaction)
+    await on_user_login(interaction);
   }
 });
 
@@ -86,11 +90,16 @@ async function on_user_login(interaction: ChatInputCommandInteraction) {
   const password = interaction.options.getString("password") ?? "";
   const school_name = interaction.options.getString("school_name") ?? "";
 
-  log.info(`User "${username}" from "${school_name}" logged in`)
+  log.info(`User "${username}" from "${school_name}" logged in`);
 
   await interaction.deferReply({ ephemeral: true });
 
-  const result = await user_login(username, password, school_name);
+  const result = await user_login(
+    username,
+    password,
+    school_name,
+    interaction.user.id
+  );
   if (!result.success) {
     log.error(result.message);
     await interaction.editReply(result.message);
@@ -100,8 +109,37 @@ async function on_user_login(interaction: ChatInputCommandInteraction) {
   log.info("Successfully logged in!");
 }
 
-function main() {
-  log.info("Hi");
+async function main() {
+  log.info("Checking timetables ...");
+
+  const users = await prisma.user.findMany();
+  for (const user of users) {
+    log.debug(`Checking timetable for "${user.untis_username}" ...`);
+    const cancelled_lessons = await get_cancelled_lessons(user);
+    await send_cancelled_lessons(cancelled_lessons, user.discrod_user_id);
+  }
+}
+
+async function send_cancelled_lessons(
+  cancelled_lessons: Lesson[],
+  user_id: string
+) {
+  // Loops through every lesson and sends a message to the channel
+  for (const lesson of cancelled_lessons) {
+    const lesson_date = new Date(lesson.date).toLocaleDateString("en-US", {
+      weekday: "long",
+    });
+    const lesson_time = new Date(lesson.date).toLocaleTimeString("en-US", {
+      hour: "numeric",
+      minute: "numeric",
+      hour12: false,
+    });
+
+    await bot.users.send(
+      user_id,
+      `The lesson **${lesson.name}** on **${lesson_date}** at **${lesson_time}** has been cancelled.`
+    );
+  }
 }
 
 log.info("Starting ...");
