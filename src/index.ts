@@ -150,7 +150,7 @@ await register_commands();
 bot.login(process.env.DISCORD_TOKEN);
 
 const job = new CronJob(
-  "* * * * *",
+  "*/5 7 * * 1-5",
   () => {
     main();
   },
