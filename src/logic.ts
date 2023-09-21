@@ -13,7 +13,7 @@ export async function user_login(
   discord_user_id: string
 ): Promise<{ success: boolean; message: any }> {
   if (
-    (await prisma.user.count({ where: { untis_username: username } })) === 0
+    (await prisma.user.count({ where: { untis_username: username } })) === 1
   ) {
     return { success: false, message: "Already logged in" };
   }
