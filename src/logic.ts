@@ -169,12 +169,12 @@ export async function get_cancelled_lessons(user: User): Promise<Lesson[]> {
     });
   }
 
-  const user_querry = await prisma.user.findUnique({ where: { id: user.id } });
-  if (!user_querry) {
+  const user_quarry = await prisma.user.findUnique({ where: { id: user.id } });
+  if (!user_quarry) {
     // FIXME: actually handle this error
     return [];
   }
-  const old_timetable = JSON.parse(user_querry.timetable);
+  const old_timetable = JSON.parse(user_quarry.timetable);
   await prisma.user.update({
     where: { id: user.id },
     data: { timetable: JSON.stringify(nice_timetable) },
