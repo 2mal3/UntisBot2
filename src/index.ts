@@ -116,7 +116,7 @@ async function main() {
   for (const user of users) {
     log.debug(`Checking timetable for "${user.untis_username}" ...`);
     const cancelled_lessons = await get_cancelled_lessons(user);
-    await send_cancelled_lessons(cancelled_lessons, user.discrod_user_id);
+    await send_cancelled_lessons(cancelled_lessons, user.discord_user_id);
   }
 }
 

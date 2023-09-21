@@ -41,7 +41,7 @@ export async function user_login(
       untis_username: username,
       untis_password: password,
       untis_server: school.untis_server,
-      discrod_user_id: discord_user_id,
+      discord_user_id: discord_user_id,
     },
   });
 
