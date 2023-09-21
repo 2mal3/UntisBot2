@@ -155,26 +155,6 @@ function filter_cancelled_lessons(
 }
 
 // Redo
-async function send_cancelled_lessons(cancelled_lessons: Lesson[]) {
-  const channel = bot.channels.cache.get(process.env.CHANNEL_ID ?? "");
-
-  // Loops through every lesson and sends a message to the channel
-  for (const lesson of cancelled_lessons) {
-    const lesson_date = new Date(lesson.date).toLocaleDateString("en-US", {
-      weekday: "long",
-    });
-    const lesson_time = new Date(lesson.date).toLocaleTimeString("en-US", {
-      hour: "numeric",
-      minute: "numeric",
-      hour12: false,
-    });
-
-    await (channel as TextChannel)?.send(
-      `The lesson **${lesson.name}** on **${lesson_date}** at **${lesson_time}** has been cancelled.`
-    );
-  }
-}
-
 export async function get_cancelled_lessons(user: User): Promise<Lesson[]> {
   const timetable = await get_timetable(user);
 
