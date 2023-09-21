@@ -154,16 +154,14 @@ function filter_cancelled_lessons(
   return cancelled_lessons;
 }
 
-// Redo
 export async function get_cancelled_lessons(user: User): Promise<Lesson[]> {
   const timetable = await get_timetable(user);
 
-  console.log("Got timetable!");
   const nice_timetable = format_timetable(timetable);
 
   // Create timetable if it doesn't exist
   if (JSON.parse(user.timetable).length === 0) {
-    log.debug("No timetable exists, creating it ...");
+    log.debug(`${user.untis_username}: No timetable exists, creating it ...`);
 
     await prisma.user.update({
       where: { id: user.id },
@@ -187,6 +185,5 @@ export async function get_cancelled_lessons(user: User): Promise<Lesson[]> {
     old_timetable
   );
 
-  console.log("Done!");
   return cancelled_lessons;
 }

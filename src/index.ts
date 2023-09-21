@@ -90,7 +90,7 @@ async function on_user_login(interaction: ChatInputCommandInteraction) {
   const password = interaction.options.getString("password") ?? "";
   const school_name = interaction.options.getString("school_name") ?? "";
 
-  log.info(`User "${username}" from "${school_name}" logged in`);
+  log.info(`User "${username}" from "${school_name}" logging in ...`);
 
   await interaction.deferReply({ ephemeral: true });
 
@@ -101,12 +101,12 @@ async function on_user_login(interaction: ChatInputCommandInteraction) {
     interaction.user.id
   );
   if (!result.success) {
-    log.error(result.message);
+    log.warn(`${username}: ${result.message}`);
     await interaction.editReply(result.message);
     return;
   }
   await interaction.editReply("Successfully logged in!");
-  log.info("Successfully logged in!");
+  log.info(`${username}: Successfully logged in!`);
 }
 
 async function main() {
@@ -118,6 +118,8 @@ async function main() {
     const cancelled_lessons = await get_cancelled_lessons(user);
     await send_cancelled_lessons(cancelled_lessons, user.discord_user_id);
   }
+
+  log.info("Checked all timetables!");
 }
 
 async function send_cancelled_lessons(
