@@ -3,14 +3,24 @@
   "version": "0.1.3",
   "module": "index.ts",
   "type": "module",
+  "scripts": {
+    "serve": "bun src/index.ts",
+    "migrate": "bun prisma migrate deploy",
+    "generate": "bun prisma generate"
+  },
   "devDependencies": {
-    "bun-types": "latest"
+    "bun-types": "latest",
+    "prisma": "^5.3.1"
   },
   "peerDependencies": {
     "typescript": "^5.0.0"
   },
   "dependencies": {
+    "@prisma/client": "^5.3.1",
+    "cron": "^2.4.3",
     "discord.js": "^14.13.0",
+    "puppeteer": "^21.3.1",
+    "tslog": "^4.9.2",
     "webuntis": "^2.0.3"
   }
 }

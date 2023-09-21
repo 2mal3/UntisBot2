@@ -5,12 +5,8 @@ A Discord bot that uses your school's WebUntis API to automatically notify you o
 
 ## Environment Variables
 
-- `SCHOOL_NAME`: the internal WebUntis name of your school
-- `UNTIS_USERNAME`: your Untis account username
-- `UNTIS_PASSWORD`: your Untis account password
-- `UNTIS_SERVER` : the internet address of the WebUntis server (e. g. cissa.webuntis.com)
-- `DISCORD_TOKEN`: the auth token for the discord bot that should send the notifications
-- `CHANNEL_ID`: the id of the Discord channel to which the notifications should be sent
+- `DISCORD_TOKEN`: the auth token for the Discord bot that should send the notifications
+- `DISCORD_APPLICATION_ID`: the application id of the Discord bot
 - `TZ`: your time zone e.g. "America/New_York"
 
 ## Libraries Used

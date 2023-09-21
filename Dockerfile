@@ -1,25 +1,27 @@
-FROM oven/bun:1.0 as app
+FROM oven/bun:1.0 AS install
 
 WORKDIR /app
 
 COPY package.json bun.lockb ./
-RUN bun install
+RUN bun install --production
 
-RUN apt-get update && \
-    apt-get install -y cron && \
-    apt-get clean && \
-    rm -rf /var/lib/apt/lists/*
-RUN touch /var/log/cron.log
-COPY docker/task /etc/cron.d/task
-RUN chmod 0644 /etc/cron.d/task && \
-    crontab /etc/cron.d/task
 
-COPY src/ ./src/
-COPY tsconfig.json .
-COPY docker/task.sh .
-COPY docker/entrypoint.sh .
+FROM node:18-alpine AS build
 
-RUN chmod +x task.sh
-RUN chmod +x entrypoint.sh
+WORKDIR /app
 
-ENTRYPOINT ["./entrypoint.sh"]
+COPY --from=install /app/node_modules/ node_modules/
+COPY prisma/ prisma/
+RUN npx prisma generate && npx prisma migrate deploy
+
+
+FROM oven/bun:1.0 AS run
+
+WORKDIR /app
+
+COPY package.json bun.lockb tsconfig.json ./
+COPY --from=build /app/node_modules/  node_modules/
+COPY --from=build /app/prisma prisma/
+COPY src/ src/
+
+ENTRYPOINT ["bun", "serve"]

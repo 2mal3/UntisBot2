@@ -1,101 +1,131 @@
-import { WebAPITimetable, WebUntis } from "webuntis";
-import { Client, GatewayIntentBits, Partials, TextChannel } from "discord.js";
+import { PrismaClient } from "@prisma/client";
+import { CronJob } from "cron";
+import {
+  Client,
+  REST,
+  GatewayIntentBits,
+  Partials,
+  TextChannel,
+  Routes,
+  ChatInputCommandInteraction,
+} from "discord.js";
+import { log } from "logging";
+import { Lesson } from "lesson_type";
+import { user_login, get_cancelled_lessons } from "logic";
+
+const prisma = new PrismaClient();
 
 const bot = new Client({
   intents: [GatewayIntentBits.Guilds],
   partials: [Partials.Channel],
 });
 
-interface Lesson {
-  id: number;
-  name: string;
-  date: Date;
-  cancelled: boolean;
-}
+async function register_commands() {
+  const commands = [
+    {
+      name: "ping",
+      description: "Replies with Pong!",
+    },
+    {
+      name: "login",
+      description: "Login with your Untis credentials",
+      options: [
+        {
+          name: "username",
+          description: "Your Untis username",
+          required: true,
+          type: 3,
+        },
+        {
+          name: "password",
+          description: "Your Untis password",
+          required: true,
+          type: 3,
+        },
+        {
+          name: "school_name",
+          description: "Your school name",
+          required: true,
+          type: 3,
+          min_length: 3,
+        },
+      ],
+    },
+  ];
 
-function create_date_from_untis_date(
-  untis_date: number,
-  untis_time: number
-): Date {
-  const untis_date_string = untis_date.toString();
-
-  const year = untis_date_string.slice(0, 4);
-  const month = untis_date_string.slice(4, 6);
-  const day = untis_date_string.slice(6, 8);
-  const hour = Math.floor(untis_time / 100)
-    .toString()
-    .padStart(2, "0");
-  const minute = (untis_time % 100).toString().padStart(2, "0");
-
-  const date_string = `${year}-${month}-${day} ${hour}:${minute}`;
-  const date = new Date(date_string);
-
-  return date;
-}
-
-async function get_timetable(): Promise<WebAPITimetable[]> {
-  // console.log(
-  //   "Logging into Untis with:",
-  //   process.env.SCHOOL_NAME,
-  //   process.env.UNTIS_USERNAME,
-  //   process.env.UNTIS_SERVER
-  // );
-  const untis = new WebUntis(
-    process.env.SCHOOL_NAME ?? "",
-    process.env.UNTIS_USERNAME ?? "",
-    process.env.UNTIS_PASSWORD ?? "",
-    process.env.UNTIS_SERVER ?? ""
+  const rest = new REST({ version: "10" }).setToken(
+    Bun.env.DISCORD_TOKEN ?? ""
   );
 
-  await untis.login();
-  const timetable = await untis.getOwnTimetableForWeek(new Date());
-  await untis.logout();
+  try {
+    log.debug("Started refreshing application (/) commands");
 
-  return timetable;
+    await rest.put(
+      Routes.applicationCommands(Bun.env.DISCORD_APPLICATION_ID ?? ""),
+      { body: commands }
+    );
+
+    log.debug("Successfully reloaded application (/) commands.");
+  } catch (error) {
+    log.error(error);
+  }
 }
 
-function format_timetable(timetable: WebAPITimetable[]): Lesson[] {
-  let nice_timetable: Lesson[] = [];
+bot.on("ready", async () => {
+  log.info("Bot connected!");
+});
 
-  for (const lesson of timetable) {
-    let nice_lesson: Lesson = {
-      id: lesson.id,
-      name: lesson.subjects[0].element.longName ?? "missingno",
-      date: create_date_from_untis_date(lesson.date, lesson.startTime),
-      cancelled: false,
-    };
-    // Ignore this error, it's a bug in the typings
-    if ((lesson.is.cancelled ?? false) || (lesson.teachers[0].element.name === "---")) {
-      nice_lesson.cancelled = true;
-    }
+bot.on("interactionCreate", async (interaction) => {
+  if (!interaction.isChatInputCommand()) return;
 
-    nice_timetable.push(nice_lesson);
+  if (interaction.commandName == "ping") {
+    await interaction.reply({ content: "Pong!", ephemeral: true });
+  } else if (interaction.commandName == "login") {
+    await on_user_login(interaction);
+  }
+});
+
+async function on_user_login(interaction: ChatInputCommandInteraction) {
+  const username = interaction.options.getString("username") ?? "";
+  const password = interaction.options.getString("password") ?? "";
+  const school_name = interaction.options.getString("school_name") ?? "";
+
+  log.info(`User "${username}" from "${school_name}" logging in ...`);
+
+  await interaction.deferReply({ ephemeral: true });
+
+  const result = await user_login(
+    username,
+    password,
+    school_name,
+    interaction.user.id
+  );
+  if (!result.success) {
+    log.warn(`${username}: ${result.message}`);
+    await interaction.editReply(result.message);
+    return;
+  }
+  await interaction.editReply("Successfully logged in!");
+  log.info(`${username}: Successfully logged in!`);
+}
+
+async function main() {
+  log.info("Checking timetables ...");
+
+  const users = await prisma.user.findMany();
+  for (const user of users) {
+    log.debug(`Checking timetable for "${user.untis_username}" ...`);
+    const cancelled_lessons = await get_cancelled_lessons(user);
+    await send_cancelled_lessons(cancelled_lessons, user.discord_user_id);
   }
 
-  return nice_timetable;
+  log.info("Checked all timetables!");
 }
 
-// Loops thought the timetable by index and prints out every lesson where the cancelled status has changed
-function filter_cancelled_lessons(
-  timetable: Lesson[],
-  old_timetable: Lesson[]
-): Lesson[] {
-  let cancelled_lessons: Lesson[] = [];
-
-  for (let i = 0; i < timetable.length; i++) {
-    if (timetable[i].cancelled !== old_timetable[i].cancelled) {
-      if (timetable[i].cancelled) {
-        cancelled_lessons.push(timetable[i]);
-      }
-    }
-  }
-
-  return cancelled_lessons;
-}
-
-async function send_cancelled_lessons(cancelled_lessons: Lesson[]) {
-  const channel = bot.channels.cache.get(process.env.CHANNEL_ID ?? "");
-
+async function send_cancelled_lessons(
+  cancelled_lessons: Lesson[],
+  user_id: string
+) {
   // Loops through every lesson and sends a message to the channel
   for (const lesson of cancelled_lessons) {
     const lesson_date = new Date(lesson.date).toLocaleDateString("en-US", {
@@ -107,45 +137,24 @@ async function send_cancelled_lessons(cancelled_lessons: Lesson[]) {
       hour12: false,
     });
 
-    await (channel as TextChannel)?.send(
+    await bot.users.send(
+      user_id,
       `The lesson **${lesson.name}** on **${lesson_date}** at **${lesson_time}** has been cancelled.`
     );
   }
 }
 
-bot.on("ready", async () => {
-  console.log("Bot connected!");
+log.info("Starting ...");
 
-  // const channel = bot.channels.cache.get(process.env.CHANNEL_ID ?? "");
-  const cancelled_lessons = await main();
-  await send_cancelled_lessons(cancelled_lessons);
-
-  process.exit(0);
-});
-
-async function main() {
-  const timetable = await get_timetable();
-  console.log("Got timetable!");
-  const nice_timetable = format_timetable(timetable);
-
-  // Create timetable.json if it doesn't exist
-  if (! await Bun.file("timetable.json").exists()) {
-    console.log("timetable.json doesn't exist, creating it ...")
-    Bun.write("timetable.json", JSON.stringify(nice_timetable));
-    process.exit(0);
-  }
-
-  const old_timetable = JSON.parse(await Bun.file("timetable.json").text());
-  Bun.write("timetable.json", JSON.stringify(nice_timetable));
-
-  const cancelled_lessons = filter_cancelled_lessons(
-    nice_timetable,
-    old_timetable
-  );
-
-  console.log("Done!")
-  return cancelled_lessons;
-}
-
-console.log("Starting ...")
+await register_commands();
 bot.login(process.env.DISCORD_TOKEN);
+
+const job = new CronJob(
+  "* * * * *",
+  () => {
+    main();
+  },
+  null,
+  true,
+  Bun.env.TZ
+);
