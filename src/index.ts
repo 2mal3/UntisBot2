@@ -147,4 +147,12 @@ log.info("Starting ...");
 await register_commands();
 bot.login(process.env.DISCORD_TOKEN);
 
-// const job = new CronJob("* * * * *", main, null, true, Bun.env.TZ);
+const job = new CronJob(
+  "* * * * *",
+  () => {
+    main();
+  },
+  null,
+  true,
+  Bun.env.TZ
+);
