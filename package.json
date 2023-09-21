@@ -5,7 +5,8 @@
   "type": "module",
   "scripts": {
     "serve": "bun src/index.ts",
-    "migrate": "bun prisma migrate deploy"
+    "migrate": "bun prisma migrate deploy",
+    "generate": "bun prisma generate"
   },
   "devDependencies": {
     "bun-types": "latest",
