@@ -1,5 +1,5 @@
 import { PrismaClient, User } from "@prisma/client";
-import puppeteer from "puppeteer";
+import { chromium } from 'playwright';
 import { WebAPITimetable, WebUntis } from "webuntis";
 import { log } from "logging";
 import { Lesson } from "lesson_type";
@@ -50,12 +50,12 @@ export async function user_login(
 
 // Get the untis internal school name and the server url
 // from the school search on the webuntis website
-async function get_school_from_name(
+export async function get_school_from_name(
   name: string
 ): Promise<{ school_name: string; untis_server: string }> {
   log.debug(`Getting school from name: ${name} ...`);
 
-  const browser = await puppeteer.launch({ headless: "new", args: ["--no-sandbox"] });
+  const browser = await chromium.launch();
   const page = await browser.newPage();
 
   await page.goto("https://webuntis.com/");
