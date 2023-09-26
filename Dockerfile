@@ -26,10 +26,13 @@ RUN apt-get update && \
 ENV PUPPETEER_SKIP_CHROMIUM_DOWNLOAD true
 ENV PUPPETEER_EXECUTABLE_PATH /usr/bin/chromium
 
-COPY package.json bun.lockb tsconfig.json ./
+COPY package.json bun.lockb tsconfig.json docker-entrypoint.sh ./
 COPY --from=build /app/node_modules/  node_modules/
 COPY --from=build /app/prisma prisma/
 COPY src/ src/
+COPY tests/ tests/
+
+RUN chmod +x docker-entrypoint.sh
 
 # TODO: properly set up own user
 # RUN useradd -m -U appuser && \
@@ -38,4 +41,4 @@ COPY src/ src/
 #     chown -R appuser:appuser /app
 # USER appuser
 
-ENTRYPOINT ["bun", "serve"]
+ENTRYPOINT ./docker-entrypoint.sh
