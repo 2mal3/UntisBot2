@@ -1,5 +1,5 @@
 import { PrismaClient, User } from "@prisma/client";
-import { chromium } from 'playwright';
+import puppeteer from "puppeteer";
 import { WebAPITimetable, WebUntis } from "webuntis";
 import { log } from "logging";
 import { Lesson } from "lesson_type";
@@ -55,7 +55,7 @@ export async function get_school_from_name(
 ): Promise<{ school_name: string; untis_server: string }> {
   log.debug(`Getting school from name: ${name} ...`);
 
-  const browser = await chromium.launch();
+  const browser = await puppeteer.launch({ headless: "new", args: ["--no-sandbox"] });
   const page = await browser.newPage();
 
   await page.goto("https://webuntis.com/");
