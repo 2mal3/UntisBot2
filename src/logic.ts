@@ -1,5 +1,4 @@
 import { PrismaClient, User } from "@prisma/client";
-import puppeteer from "puppeteer";
 import { WebAPITimetable, WebUntis } from "webuntis";
 import { log } from "logging";
 import { Lesson } from "lesson_type";
@@ -19,6 +18,7 @@ export async function user_login(
   }
 
   const school = await get_school_from_name(school_name);
+  log.debug(`School name is ${school.school_name}`);
   const untis = new WebUntis(
     school.school_name,
     username,
@@ -53,27 +53,24 @@ export async function user_login(
 export async function get_school_from_name(
   name: string
 ): Promise<{ school_name: string; untis_server: string }> {
-  log.debug(`Getting school from name: ${name} ...`);
+  const response = await fetch("https://mobile.webuntis.com/ms/schoolquery2", {
+    method: "POST",
+    body: JSON.stringify({
+      id: "",
+      method: "searchSchool",
+      params: [
+        {
+          search: name,
+        },
+      ],
+      jsonrpc: "2.0",
+    }),
+  });
+  const data = await response.json();
 
-  const browser = await puppeteer.launch({ headless: "new", args: ["--no-sandbox"] });
-  const page = await browser.newPage();
+  const school_name = data.result.schools[0].loginName;
+  const untis_sever = data.result.schools[0].server;
 
-  await page.goto("https://webuntis.com/");
-
-  const search_input_selector = ".Select-placeholder";
-  await page.waitForSelector(search_input_selector);
-  await page.type(search_input_selector, name);
-
-  const search_option_selector = ".search-option";
-  await page.waitForSelector(search_option_selector);
-  await page.click(search_option_selector);
-
-  const untis_sever = page.url().split("/")[2];
-  const school_name = page.url().split("/")[4].split("=")[1].replace("+", " ");
-
-  await browser.close();
-
-  log.debug(`Done! School name is ${school_name}`);
   return { school_name: school_name, untis_server: untis_sever };
 }
 
