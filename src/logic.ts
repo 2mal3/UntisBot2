@@ -3,6 +3,7 @@ import { WebAPITimetable, WebUntis } from "webuntis";
 import { log } from "logging";
 import { Lesson, User } from "types";
 import { v4 as uuid4 } from "uuid";
+import { expect } from "bun:test";
 
 const db = new Database("database/database.db");
 
@@ -20,7 +21,13 @@ export async function user_login(
     return { success: false, message: "Already logged in" };
   }
 
-  const school = await get_school_from_name(school_name);
+  let school: { school_name: string; untis_server: string };
+  try {
+    school = await get_school_from_name(school_name);
+  } catch (error) {
+    return { success: false, message: "No schools found for this school name" };
+  }
+
   log.debug(`School name is ${school.school_name}`);
   const untis = new WebUntis(
     school.school_name,
@@ -72,6 +79,10 @@ export async function get_school_from_name(
     }),
   });
   const data = await response.json();
+
+  if (data.result.schools.length === 0) {
+    throw new Error("No schools found");
+  }
 
   const school_name = data.result.schools[0].loginName;
   const untis_sever = data.result.schools[0].server;
