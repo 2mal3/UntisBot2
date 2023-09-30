@@ -7,6 +7,7 @@ import {
   Partials,
   Routes,
   ChatInputCommandInteraction,
+  ActivityType,
 } from "discord.js";
 import { log } from "logging";
 import { Lesson, User } from "types";
@@ -106,6 +107,9 @@ async function on_user_login(interaction: ChatInputCommandInteraction) {
   }
   await interaction.editReply("Successfully logged in!");
   log.info(`${username}: Successfully logged in!`);
+
+  const user_amount = db.query("SELECT * FROM users").all().length;
+  bot.user?.setActivity(`${user_amount} timetables`, { type: ActivityType.Watching });
 }
 
 async function main() {
