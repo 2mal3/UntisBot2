@@ -1,19 +1,18 @@
-import { PrismaClient } from "@prisma/client";
+import { Database } from "bun:sqlite";
 import { CronJob } from "cron";
 import {
   Client,
   REST,
   GatewayIntentBits,
   Partials,
-  TextChannel,
   Routes,
   ChatInputCommandInteraction,
 } from "discord.js";
 import { log } from "logging";
-import { Lesson } from "lesson_type";
+import { Lesson, User } from "types";
 import { user_login, get_cancelled_lessons } from "logic";
 
-const prisma = new PrismaClient();
+const db = new Database("database/database.db");
 
 const bot = new Client({
   intents: [GatewayIntentBits.Guilds],
@@ -112,7 +111,7 @@ async function on_user_login(interaction: ChatInputCommandInteraction) {
 async function main() {
   log.info("Checking timetables ...");
 
-  const users = await prisma.user.findMany();
+  const users = db.query("SELECT * FROM users").all() as User[];
   for (const user of users) {
     log.debug(`Checking timetable for "${user.untis_username}" ...`);
     const cancelled_lessons = await get_cancelled_lessons(user);
@@ -145,6 +144,20 @@ async function send_cancelled_lessons(
 }
 
 log.info("Starting ...");
+
+db.exec("PRAGMA journal_mode = WAL;");
+db.query(
+  `CREATE TABLE IF NOT EXISTS "users" (
+	"id"	TEXT NOT NULL UNIQUE,
+	"untis_username"	TEXT NOT NULL,
+	"untis_password"	TEXT NOT NULL,
+	"untis_school_name"	TEXT NOT NULL,
+	"untis_server"	TEXT NOT NULL,
+	"timetable"	TEXT NOT NULL,
+	"discord_user_id"	TEXT NOT NULL,
+	PRIMARY KEY("id")
+);`
+).run();
 
 await register_commands();
 bot.login(process.env.DISCORD_TOKEN);

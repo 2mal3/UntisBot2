@@ -4,11 +4,10 @@
   "module": "index.ts",
   "type": "module",
   "scripts": {
-    "serve": "bun src/index.ts",
-    "migrate": "bun prisma migrate deploy",
-    "generate": "bun prisma generate"
+    "serve": "bun src/index.ts"
   },
   "devDependencies": {
+    "@types/uuid": "^9.0.4",
     "bun-types": "latest"
   },
   "peerDependencies": {
@@ -16,10 +15,10 @@
   },
   "dependencies": {
     "@prisma/client": "^5.3.1",
-    "prisma": "^5.3.1",
     "cron": "^2.4.3",
     "discord.js": "^14.13.0",
     "tslog": "^4.9.2",
+    "uuid": "^9.0.1",
     "webuntis": "^2.0.3"
   }
 }

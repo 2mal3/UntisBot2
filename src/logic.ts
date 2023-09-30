@@ -1,9 +1,10 @@
-import { PrismaClient, User } from "@prisma/client";
+import { Database } from "bun:sqlite";
 import { WebAPITimetable, WebUntis } from "webuntis";
 import { log } from "logging";
-import { Lesson } from "lesson_type";
+import { Lesson, User } from "types";
+import { v4 as uuid4 } from "uuid";
 
-const prisma = new PrismaClient();
+const db = new Database("database/database.db");
 
 export async function user_login(
   username: string,
@@ -12,7 +13,9 @@ export async function user_login(
   discord_user_id: string
 ): Promise<{ success: boolean; message: any }> {
   if (
-    (await prisma.user.count({ where: { untis_username: username } })) === 1
+    db.query("SELECT * FROM users WHERE untis_username = $untis_username").all({
+      $untis_username: username,
+    }).length === 1
   ) {
     return { success: false, message: "Already logged in" };
   }
@@ -35,14 +38,16 @@ export async function user_login(
     return { success: false, message: error_message };
   }
 
-  await prisma.user.create({
-    data: {
-      untis_school_name: school.school_name,
-      untis_username: username,
-      untis_password: password,
-      untis_server: school.untis_server,
-      discord_user_id: discord_user_id,
-    },
+  db.query(
+    "INSERT INTO users (id, untis_username, untis_password, untis_school_name, untis_server, timetable, discord_user_id) VALUES ($id, $untis_username, $untis_password, $untis_school_name, $untis_server, $timetable, $discord_user_id)"
+  ).run({
+    $id: uuid4(),
+    $untis_username: username,
+    $untis_password: password,
+    $untis_school_name: school.school_name,
+    $untis_server: school.untis_server,
+    $timetable: "[]",
+    $discord_user_id: discord_user_id,
   });
 
   return { success: true, message: "" };
@@ -160,21 +165,23 @@ export async function get_cancelled_lessons(user: User): Promise<Lesson[]> {
   if (JSON.parse(user.timetable).length === 0) {
     log.debug(`${user.untis_username}: No timetable exists, creating it ...`);
 
-    await prisma.user.update({
-      where: { id: user.id },
-      data: { timetable: JSON.stringify(nice_timetable) },
+    db.query("UPDATE users SET timetable = $timetable WHERE id = $id").run({
+      $timetable: JSON.stringify(nice_timetable),
+      $id: user.id,
     });
   }
 
-  const user_quarry = await prisma.user.findUnique({ where: { id: user.id } });
+  const user_quarry = db.query("SELECT * FROM users WHERE id = $id").get({
+    $id: user.id,
+  }) as User;
   if (!user_quarry) {
     // FIXME: actually handle this error
     return [];
   }
   const old_timetable = JSON.parse(user_quarry.timetable);
-  await prisma.user.update({
-    where: { id: user.id },
-    data: { timetable: JSON.stringify(nice_timetable) },
+  db.query("UPDATE users SET timetable = $timetable WHERE id = $id").run({
+    $timetable: JSON.stringify(nice_timetable),
+    $id: user.id,
   });
 
   const cancelled_lessons = filter_cancelled_lessons(
