@@ -73,6 +73,8 @@ async function register_commands() {
 
 bot.on("ready", async () => {
   log.info("Bot connected!");
+
+  await set_user_count_activity();
 });
 
 bot.on("interactionCreate", async (interaction) => {
@@ -108,8 +110,16 @@ async function on_user_login(interaction: ChatInputCommandInteraction) {
   await interaction.editReply("Successfully logged in!");
   log.info(`${username}: Successfully logged in!`);
 
+  await set_user_count_activity();
+}
+
+async function set_user_count_activity() {
+  log.debug("Setting user count activity ...")
+
   const user_amount = db.query("SELECT * FROM users").all().length;
-  bot.user?.setActivity(`${user_amount} timetables`, { type: ActivityType.Watching });
+  bot.user?.setActivity(`${user_amount} timetables`, {
+    type: ActivityType.Watching,
+  });
 }
 
 async function main() {
