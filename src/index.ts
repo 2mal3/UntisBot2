@@ -117,7 +117,7 @@ async function set_user_count_activity() {
   log.debug("Setting user count activity ...")
 
   const user_amount = db.query("SELECT * FROM users").all().length;
-  bot.user?.setActivity(`${user_amount} timetables`, {
+  bot.user?.setActivity(`${user_amount} timetables | v${process.env.npm_package_version}`, {
     type: ActivityType.Watching,
   });
 }
@@ -157,7 +157,7 @@ async function send_cancelled_lessons(
   }
 }
 
-log.info("Starting ...");
+log.info(`Starting v${process.env.npm_package_version} ...`);
 
 db.exec("PRAGMA journal_mode = WAL;");
 db.query(
