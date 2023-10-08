@@ -133,6 +133,8 @@ async function main() {
   }
 
   log.info("Checked all timetables!");
+
+  await set_user_count_activity();
 }
 
 async function send_cancelled_lessons(
