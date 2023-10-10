@@ -120,6 +120,8 @@ async function set_user_count_activity() {
   bot.user?.setActivity(`${user_amount} timetables | v${process.env.npm_package_version}`, {
     type: ActivityType.Watching,
   });
+
+  log.debug("Set user count activity!")
 }
 
 async function main() {
