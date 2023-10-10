@@ -166,16 +166,20 @@ function filter_cancelled_lessons(
 }
 
 export async function get_cancelled_lessons(user: User): Promise<Lesson[]> {
-  const timetable = await get_timetable(user);
-
-  const nice_timetable = format_timetable(timetable);
+  const nice_new_timetable = format_timetable(await get_timetable(user));
 
   // Create timetable if it doesn't exist
-  if (JSON.parse(user.timetable).length === 0) {
-    log.debug(`${user.untis_username}: No timetable exists, creating it ...`);
+  const user_timetable = JSON.parse(user.timetable) as Lesson[];
+  if (
+    user_timetable.length === 0 ||
+    user_timetable[0].date !== nice_new_timetable[0].date
+  ) {
+    log.debug(
+      `${user.untis_username}: No up to date timetable exists, creating it ...`
+    );
 
     db.query("UPDATE users SET timetable = $timetable WHERE id = $id").run({
-      $timetable: JSON.stringify(nice_timetable),
+      $timetable: JSON.stringify(nice_new_timetable),
       $id: user.id,
     });
   }
@@ -189,12 +193,12 @@ export async function get_cancelled_lessons(user: User): Promise<Lesson[]> {
   }
   const old_timetable = JSON.parse(user_quarry.timetable);
   db.query("UPDATE users SET timetable = $timetable WHERE id = $id").run({
-    $timetable: JSON.stringify(nice_timetable),
+    $timetable: JSON.stringify(nice_new_timetable),
     $id: user.id,
   });
 
   const cancelled_lessons = filter_cancelled_lessons(
-    nice_timetable,
+    nice_new_timetable,
     old_timetable
   );
 
