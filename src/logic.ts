@@ -3,7 +3,6 @@ import { WebAPITimetable, WebUntis } from "webuntis";
 import { log } from "logging";
 import { Lesson, User } from "types";
 import { v4 as uuid4 } from "uuid";
-import { expect } from "bun:test";
 
 const db = new Database("database/database.db");
 
