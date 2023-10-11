@@ -81,7 +81,7 @@ bot.on("interactionCreate", async (interaction) => {
   if (!interaction.isChatInputCommand()) return;
 
   if (interaction.commandName == "ping") {
-    await interaction.reply({ content: "Pong!", ephemeral: true });
+    await interaction.reply({ content: "Pong!", ephemeral: false });
   } else if (interaction.commandName == "login") {
     await on_user_login(interaction);
   }
@@ -94,7 +94,7 @@ async function on_user_login(interaction: ChatInputCommandInteraction) {
 
   log.info(`User "${username}" from "${school_name}" logging in ...`);
 
-  await interaction.deferReply({ ephemeral: true });
+  await interaction.deferReply({ ephemeral: false });
 
   const result = await user_login(
     username,
