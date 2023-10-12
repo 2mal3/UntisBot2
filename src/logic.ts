@@ -149,7 +149,7 @@ function format_timetable(timetable: WebAPITimetable[]): Lesson[] {
 }
 
 // Loops thought the timetable by index and prints out every lesson where the cancelled status has changed
-function filter_cancelled_lessons(
+export function filter_cancelled_lessons(
   timetable: Lesson[],
   old_timetable: Lesson[]
 ): Lesson[] {
