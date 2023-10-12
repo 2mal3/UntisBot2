@@ -103,7 +103,7 @@ function create_date_from_untis_date(
     .padStart(2, "0");
   const minute = (untis_time % 100).toString().padStart(2, "0");
 
-  const date_string = `${year}-${month}-${day} ${hour}:${minute}`;
+  const date_string = `${year}-${month}-${day}T${hour}:${minute}:00.000Z`;
   const date = new Date(date_string);
 
   return date;
