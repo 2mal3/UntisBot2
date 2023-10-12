@@ -156,7 +156,7 @@ function filter_cancelled_lessons(
   let cancelled_lessons: Lesson[] = [];
 
   for (let i = 0; i < timetable.length; i++) {
-    if (timetable[i].date === old_timetable[i].date && timetable[i].cancelled) {
+    if (timetable[i].date.getTime() === old_timetable[i].date.getTime() && timetable[i].cancelled) {
       cancelled_lessons.push(timetable[i]);
     }
   }
