@@ -4,13 +4,12 @@ import { log } from "logging";
 import { Lesson, User } from "types";
 import { v4 as uuid4 } from "uuid";
 
-const db = new Database("database/database.db");
-
 export async function user_login(
+  db: Database,
   username: string,
   password: string,
   school_name: string,
-  discord_user_id: string
+  discord_user_id: string,
 ): Promise<{ success: boolean; message: any }> {
   if (
     db.query("SELECT * FROM users WHERE untis_username = $untis_username").all({
@@ -164,7 +163,7 @@ export function filter_cancelled_lessons(
   return cancelled_lessons;
 }
 
-export async function get_cancelled_lessons(user: User): Promise<Lesson[]> {
+export async function get_cancelled_lessons(db: Database, user: User): Promise<Lesson[]> {
   const nice_new_timetable = format_timetable(await get_timetable(user));
 
   // Create timetable if it doesn't exist

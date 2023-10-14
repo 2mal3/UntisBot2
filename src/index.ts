@@ -13,7 +13,17 @@ import { log } from "logging";
 import { Lesson, User } from "types";
 import { user_login, get_cancelled_lessons } from "logic";
 
-const db = new Database("database/database.db");
+// Connect to the database
+let db: Database;
+try {
+  db = new Database("database/database.db");
+} catch (error) {
+  log.fatal(error);
+  process.exit(1);
+}
+process.on("exit", () => {
+  db.close();
+});
 
 const bot = new Client({
   intents: [GatewayIntentBits.Guilds],
@@ -97,6 +107,7 @@ async function on_user_login(interaction: ChatInputCommandInteraction) {
   await interaction.deferReply({ ephemeral: false });
 
   const result = await user_login(
+    db,
     username,
     password,
     school_name,
@@ -114,14 +125,17 @@ async function on_user_login(interaction: ChatInputCommandInteraction) {
 }
 
 async function set_user_count_activity() {
-  log.debug("Setting user count activity ...")
+  log.debug("Setting user count activity ...");
 
   const user_amount = db.query("SELECT * FROM users").all().length;
-  bot.user?.setActivity(`${user_amount} timetables | v${process.env.npm_package_version}`, {
-    type: ActivityType.Watching,
-  });
+  bot.user?.setActivity(
+    `${user_amount} timetables | v${process.env.npm_package_version}`,
+    {
+      type: ActivityType.Watching,
+    }
+  );
 
-  log.debug("Set user count activity!")
+  log.debug("Set user count activity!");
 }
 
 async function main() {
@@ -130,7 +144,7 @@ async function main() {
   const users = db.query("SELECT * FROM users").all() as User[];
   for (const user of users) {
     log.debug(`Checking timetable for "${user.untis_username}" ...`);
-    const cancelled_lessons = await get_cancelled_lessons(user);
+    const cancelled_lessons = await get_cancelled_lessons(db, user);
     await send_cancelled_lessons(cancelled_lessons, user.discord_user_id);
   }
 
