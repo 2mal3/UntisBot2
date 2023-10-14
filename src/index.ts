@@ -1,3 +1,5 @@
+log.info(`Starting v${process.env.npm_package_version} ...`);
+
 import { Database } from "bun:sqlite";
 import { CronJob } from "cron";
 import {
@@ -14,6 +16,7 @@ import { Lesson, User } from "types";
 import { user_login, get_cancelled_lessons } from "logic";
 
 // Connect to the database
+log.debug("Connecting to database ...");
 let db: Database;
 try {
   db = new Database("database/database.db");
@@ -21,6 +24,7 @@ try {
   log.fatal(error);
   process.exit(1);
 }
+log.debug("Connected to database!");
 process.on("exit", () => {
   db.close();
 });
@@ -174,8 +178,6 @@ async function send_cancelled_lessons(
     );
   }
 }
-
-log.info(`Starting v${process.env.npm_package_version} ...`);
 
 db.exec("PRAGMA journal_mode = WAL;");
 db.query(
