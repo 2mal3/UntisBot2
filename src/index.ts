@@ -108,7 +108,7 @@ async function on_user_login(interaction: ChatInputCommandInteraction) {
 
   log.info(`User "${username}" from "${school_name}" logging in ...`);
 
-  await interaction.deferReply({ ephemeral: false });
+  await interaction.deferReply({ ephemeral: true });
 
   const result = await user_login(
     db,
