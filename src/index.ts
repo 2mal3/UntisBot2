@@ -114,6 +114,7 @@ async function on_user_login(interaction: ChatInputCommandInteraction) {
     untis_password: password,
     untis_school_name: school_name,
     untis_server: "",
+    untis_qr_data: "",
     timetable: "[]",
     discord_user_id: interaction.user.id,
   };
@@ -190,10 +191,11 @@ db.exec("PRAGMA journal_mode = WAL;");
 db.query(
   `CREATE TABLE IF NOT EXISTS "users" (
 	"id"	TEXT NOT NULL UNIQUE,
-	"untis_username"	TEXT NOT NULL,
-	"untis_password"	TEXT NOT NULL,
-	"untis_school_name"	TEXT NOT NULL,
-	"untis_server"	TEXT NOT NULL,
+	"untis_username"	TEXT,
+	"untis_password"	TEXT,
+	"untis_school_name"	TEXT,
+	"untis_server"	TEXT,
+  "untis_qr_data" TEXT,
 	"timetable"	TEXT NOT NULL,
 	"discord_user_id"	TEXT NOT NULL,
 	PRIMARY KEY("id")
