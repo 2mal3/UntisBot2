@@ -46,6 +46,24 @@ export async function get_school_from_name(
   return { school_name: school_name, untis_server: untis_sever };
 }
 
+export async function check_credentials(
+  school_name: string,
+  username: string,
+  password: string,
+  server: string
+): Promise<boolean> {
+  const untis = new WebUntis(school_name, username, password, server);
+
+  try {
+    await untis.login();
+    await untis.logout();
+  } catch (error) {
+    return false;
+  }
+
+  return true;
+}
+
 function format_timetable(timetable: WebAPITimetable[]): Lesson[] {
   let nice_timetable: Lesson[] = [];
 
