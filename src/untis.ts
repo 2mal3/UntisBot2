@@ -46,13 +46,13 @@ export async function get_school_from_name(
   return { school_name: school_name, untis_server: untis_sever };
 }
 
-export async function check_credentials(
-  school_name: string,
-  username: string,
-  password: string,
-  server: string
-): Promise<boolean> {
-  const untis = new WebUntis(school_name, username, password, server);
+export async function check_credentials(user: User): Promise<boolean> {
+  const untis = new WebUntis(
+    user.untis_school_name,
+    user.untis_username,
+    user.untis_password,
+    user.untis_server
+  );
 
   try {
     await untis.login();

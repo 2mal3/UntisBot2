@@ -1,5 +1,4 @@
 import { Database } from "bun:sqlite";
-import { WebUntis } from "webuntis";
 import { log } from "logging";
 import { Lesson, User } from "types";
 import { get_school_from_name, get_timetable, check_credentials } from "untis";
@@ -7,39 +6,30 @@ import { v4 as uuid4 } from "uuid";
 
 export async function user_login(
   db: Database,
-  username: string,
-  password: string,
-  school_name: string,
-  discord_user_id: string
+  user: User
 ): Promise<{ success: boolean; message: any }> {
   // Skip if the user is already logged in
   if (
     db.query("SELECT * FROM users WHERE untis_username = $untis_username").all({
-      $untis_username: username,
+      $untis_username: user.untis_username,
     }).length === 1
   ) {
     return { success: false, message: "Already logged in" };
   }
 
   // Find the internal school name and the server url from the given school name
-  let school: { school_name: string; untis_server: string };
   try {
-    school = await get_school_from_name(school_name);
+    const school = await get_school_from_name(user.untis_school_name);
+    user.untis_school_name = school.school_name;
+    user.untis_server = school.untis_server;
   } catch (error) {
     return { success: false, message: "No schools found for this school name" };
   }
 
-  log.debug(`School name is ${school.school_name}`);
+  log.debug(`School name is ${user.untis_school_name}`);
 
   // Check if the credentials are correct
-  if (
-    !(await check_credentials(
-      school.school_name,
-      username,
-      password,
-      school.untis_server
-    ))
-  ) {
+  if (!(await check_credentials(user))) {
     return { success: false, message: "Bad credentials" };
   }
 
@@ -48,12 +38,12 @@ export async function user_login(
     "INSERT INTO users (id, untis_username, untis_password, untis_school_name, untis_server, timetable, discord_user_id) VALUES ($id, $untis_username, $untis_password, $untis_school_name, $untis_server, $timetable, $discord_user_id)"
   ).run({
     $id: uuid4(),
-    $untis_username: username,
-    $untis_password: password,
-    $untis_school_name: school.school_name,
-    $untis_server: school.untis_server,
+    $untis_username: user.untis_username,
+    $untis_password: user.untis_password,
+    $untis_school_name: user.untis_school_name,
+    $untis_server: user.untis_server,
     $timetable: "[]",
-    $discord_user_id: discord_user_id,
+    $discord_user_id: user.discord_user_id,
   });
 
   return { success: true, message: "" };
@@ -82,20 +72,20 @@ export async function get_cancelled_lessons(
   db: Database,
   user: User
 ): Promise<Lesson[]> {
-  const nice_new_timetable = await get_timetable(user);
+  const new_timetable = await get_timetable(user);
 
   // Create timetable if it doesn't exist
   const user_timetable = JSON.parse(user.timetable) as Lesson[];
   if (
     user_timetable.length === 0 ||
-    user_timetable[0].date !== nice_new_timetable[0].date
+    user_timetable[0].date !== new_timetable[0].date
   ) {
     log.debug(
       `${user.untis_username}: No up to date timetable exists, creating it ...`
     );
 
     db.query("UPDATE users SET timetable = $timetable WHERE id = $id").run({
-      $timetable: JSON.stringify(nice_new_timetable),
+      $timetable: JSON.stringify(new_timetable),
       $id: user.id,
     });
   }
@@ -109,12 +99,12 @@ export async function get_cancelled_lessons(
   }
   const old_timetable = JSON.parse(user_quarry.timetable);
   db.query("UPDATE users SET timetable = $timetable WHERE id = $id").run({
-    $timetable: JSON.stringify(nice_new_timetable),
+    $timetable: JSON.stringify(new_timetable),
     $id: user.id,
   });
 
   const cancelled_lessons = filter_cancelled_lessons(
-    nice_new_timetable,
+    new_timetable,
     old_timetable
   );
 
