@@ -102,28 +102,35 @@ bot.on("interactionCreate", async (interaction) => {
 });
 
 async function on_user_login(interaction: ChatInputCommandInteraction) {
+  await interaction.deferReply({ ephemeral: true });
+
   const username = interaction.options.getString("username") ?? "";
   const password = interaction.options.getString("password") ?? "";
   const school_name = interaction.options.getString("school_name") ?? "";
 
-  log.info(`User "${username}" from "${school_name}" logging in ...`);
+  const user: User = {
+    id: "",
+    untis_username: username,
+    untis_password: password,
+    untis_school_name: school_name,
+    untis_server: "",
+    timetable: "[]",
+    discord_user_id: interaction.user.id,
+  };
 
-  await interaction.deferReply({ ephemeral: true });
+  log.info(`User "${username}" from "${school_name}" logging in ...`);
 
   const result = await user_login(
     db,
-    username,
-    password,
-    school_name,
-    interaction.user.id
+    user
   );
   if (!result.success) {
-    log.warn(`${username}: ${result.message}`);
+    log.warn(`${user.untis_username}: ${result.message}`);
     await interaction.editReply(result.message);
     return;
   }
   await interaction.editReply("Successfully logged in!");
-  log.info(`${username}: Successfully logged in!`);
+  log.info(`${user.untis_username}: Successfully logged in!`);
 
   await set_user_count_activity();
 }
