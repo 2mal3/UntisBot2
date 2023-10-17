@@ -97,7 +97,16 @@ export async function get_cancelled_lessons(
     // FIXME: actually handle this error
     return [];
   }
-  const old_timetable = JSON.parse(user_quarry.timetable);
+
+  const old_timetable = JSON.parse(
+    user_quarry.timetable,
+    (key: string, value: any) => {
+      if (key === "date") {
+        return new Date(value);
+      }
+      return value;
+    }
+  ) as Lesson[];
   db.query("UPDATE users SET timetable = $timetable WHERE id = $id").run({
     $timetable: JSON.stringify(new_timetable),
     $id: user.id,
