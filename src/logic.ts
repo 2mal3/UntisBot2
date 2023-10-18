@@ -18,15 +18,20 @@ export async function user_login(
   }
 
   // Find the internal school name and the server url from the given school name
-  try {
-    const school = await get_school_from_name(user.untis_school_name);
-    user.untis_school_name = school.school_name;
-    user.untis_server = school.untis_server;
-  } catch (error) {
-    return { success: false, message: "No schools found for this school name" };
+  if (!user.untis_qr_data) {
+    try {
+      const school = await get_school_from_name(user.untis_school_name);
+      user.untis_school_name = school.school_name;
+      user.untis_server = school.untis_server;
+    } catch (error) {
+      return {
+        success: false,
+        message: "No schools found for this school name",
+      };
+    }
   }
 
-  log.debug(`School name is ${user.untis_school_name}`);
+  log.debug(`School name is "${user.untis_school_name}"`);
 
   // Check if the credentials are correct
   if (!(await check_credentials(user))) {

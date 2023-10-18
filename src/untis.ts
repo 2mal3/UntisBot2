@@ -1,13 +1,35 @@
-import { Lesson, User } from "types";
-import { WebAPITimetable, WebUntis } from "webuntis";
+import { WebAPITimetable, WebUntis, WebUntisQR } from "webuntis";
+import { URL } from "url"
+import { authenticator as Authenticator } from "otplib"
 
-export async function get_timetable(user: User): Promise<Lesson[]> {
-  const untis = new WebUntis(
+import { log } from "logging";
+import { Lesson, User } from "types";
+
+
+function getUntisObject(user: User): WebUntis {
+  if (user.untis_qr_data) {
+    log.debug("Using QR code login")
+
+    // FIXME: problem with bun
+    return new WebUntisQR(
+      user.untis_qr_data,
+      "UntisBot",
+      Authenticator,
+      URL
+    )
+  }
+
+  log.debug("Using normal login")
+  return new WebUntis(
     user.untis_school_name,
     user.untis_username,
     user.untis_password,
     user.untis_server
-  );
+  )
+}
+
+export async function get_timetable(user: User): Promise<Lesson[]> {
+  const untis = getUntisObject(user);
 
   await untis.login();
   const timetable = await untis.getOwnTimetableForWeek(new Date());
@@ -47,17 +69,13 @@ export async function get_school_from_name(
 }
 
 export async function check_credentials(user: User): Promise<boolean> {
-  const untis = new WebUntis(
-    user.untis_school_name,
-    user.untis_username,
-    user.untis_password,
-    user.untis_server
-  );
+  const untis = getUntisObject(user);
 
   try {
     await untis.login();
     await untis.logout();
   } catch (error) {
+    log.error(error)
     return false;
   }
 
