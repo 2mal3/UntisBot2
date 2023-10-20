@@ -76,10 +76,10 @@ export async function get_cancelled_lessons(
   const new_timetable = await get_timetable(user);
 
   // Create timetable if it doesn't exist
-  const user_timetable = JSON.parse(user.timetable) as Lesson[];
+  const current_timetable = JSON.parse(user.timetable) as Lesson[];
   if (
-    user_timetable.length === 0 ||
-    user_timetable[0].date !== new_timetable[0].date
+    current_timetable.length === 0 || // No timetable - run after first login
+    current_timetable[0].date !== new_timetable[0].date // Timetable is from the last week
   ) {
     log.debug(
       `${user.untis_username}: No up to date timetable exists, creating it ...`
@@ -91,13 +91,10 @@ export async function get_cancelled_lessons(
     });
   }
 
+  // Get the old timetable from the database
   const user_quarry = db.query("SELECT * FROM users WHERE id = $id").get({
     $id: user.id,
   }) as User;
-  if (!user_quarry) {
-    // FIXME: actually handle this error
-    return [];
-  }
 
   const old_timetable = JSON.parse(
     user_quarry.timetable,
@@ -108,11 +105,14 @@ export async function get_cancelled_lessons(
       return value;
     }
   ) as Lesson[];
+
+  // Overwrite the old timetable with the new one
   db.query("UPDATE users SET timetable = $timetable WHERE id = $id").run({
     $timetable: JSON.stringify(new_timetable),
     $id: user.id,
   });
 
+  // Filter out the new cancelled lessons
   const cancelled_lessons = filter_cancelled_lessons(
     new_timetable,
     old_timetable
