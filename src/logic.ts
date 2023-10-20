@@ -51,17 +51,18 @@ export async function user_login(
 
 // Loops thought the timetable by index and prints out every lesson where the cancelled status has changed
 export function filter_cancelled_lessons(
-  timetable: Lesson[],
+  new_timetable: Lesson[],
   old_timetable: Lesson[]
 ): Lesson[] {
   let cancelled_lessons: Lesson[] = [];
 
-  for (let i = 0; i < timetable.length; i++) {
+  for (let i = 0; i < new_timetable.length; i++) {
     if (
-      timetable[i].date.getTime() === old_timetable[i].date.getTime() &&
-      timetable[i].cancelled
+      new_timetable[i].date.getTime() === old_timetable[i].date.getTime() &&
+      new_timetable[i].cancelled &&
+      new_timetable[i].cancelled !== old_timetable[i].cancelled
     ) {
-      cancelled_lessons.push(timetable[i]);
+      cancelled_lessons.push(new_timetable[i]);
     }
   }
 
