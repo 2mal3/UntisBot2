@@ -69,6 +69,13 @@ export function filter_cancelled_lessons(
   return cancelled_lessons;
 }
 
+interface LessonImport {
+  id: number;
+  name: string;
+  date: string; // This is a string because it is parsed from JSON
+  cancelled: boolean;
+}
+
 export async function get_cancelled_lessons(
   db: Database,
   user: User
@@ -76,7 +83,17 @@ export async function get_cancelled_lessons(
   const new_timetable = await get_timetable(user);
 
   // Create timetable if it doesn't exist
-  const current_timetable = JSON.parse(user.timetable) as Lesson[];
+  const current_unformatted_timetable = JSON.parse(
+    user.timetable
+  ) as LessonImport[];
+  const current_timetable: Lesson[] = current_unformatted_timetable.map((l) => {
+    return {
+      id: l.id,
+      name: l.name,
+      date: new Date(l.date),
+      cancelled: l.cancelled,
+    };
+  });
   if (
     current_timetable.length === 0 || // No timetable - run after first login
     current_timetable[0].date !== new_timetable[0].date // Timetable is from the last week
