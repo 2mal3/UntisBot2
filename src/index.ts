@@ -121,10 +121,7 @@ async function on_user_login(interaction: ChatInputCommandInteraction) {
 
   log.info(`User "${username}" from "${school_name}" logging in ...`);
 
-  const result = await user_login(
-    db,
-    user
-  );
+  const result = await user_login(db, user);
   if (!result.success) {
     log.warn(`${user.untis_username}: ${result.message}`);
     await interaction.editReply(result.message);
