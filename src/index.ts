@@ -25,8 +25,9 @@ try {
   process.exit(1);
 }
 log.debug("Connected to database!");
-process.on("exit", () => {
+process.on("SIGTERM", () => {
   db.close();
+  process.exit(0);
 });
 
 const bot = new Client({
