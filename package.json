@@ -14,10 +14,10 @@
     "typescript": "^5.0.0"
   },
   "dependencies": {
-    "cron": "^2.4.3",
-    "discord.js": "^14.13.0",
-    "tslog": "^4.9.2",
-    "uuid": "^9.0.1",
-    "webuntis": "^2.0.3"
+    "cron": "~2.4",
+    "discord.js": "~14.13",
+    "tslog": "~4.9.2",
+    "uuid": "~9.0",
+    "webuntis": "~2.0.3"
   }
 }
