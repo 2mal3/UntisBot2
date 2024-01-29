@@ -42,10 +42,6 @@ async function register_commands() {
       description: "Replies with Pong!",
     },
     {
-      name: "test",
-      description: "Test command"
-    },
-    {
       name: "login",
       description: "Login with your Untis credentials",
       options: [
@@ -103,9 +99,6 @@ bot.on("interactionCreate", async (interaction) => {
     await interaction.reply({ content: "Pong!", ephemeral: false });
   } else if (interaction.commandName == "login") {
     await on_user_login(interaction);
-  } else if (interaction.commandName == "test") {
-    await main();
-    await interaction.reply({ content: "Test!" });
   }
 });
 
