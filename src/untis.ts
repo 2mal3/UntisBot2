@@ -1,7 +1,7 @@
 import { Lesson, User } from "types";
 import { WebAPITimetable, WebUntis } from "webuntis";
 
-export async function get_timetable(user: User): Promise<Lesson[]> {
+export async function get_canceled_lessons(user: User): Promise<Lesson[]> {
   const untis = new WebUntis(
     user.untis_school_name,
     user.untis_username,
@@ -13,7 +13,7 @@ export async function get_timetable(user: User): Promise<Lesson[]> {
   const timetable = await untis.getOwnTimetableForWeek(new Date());
   await untis.logout();
 
-  return format_timetable(timetable);
+  return filter_cancelled_lessons(timetable);
 }
 
 // Get the untis internal school name and the server url
@@ -64,31 +64,28 @@ export async function check_credentials(user: User): Promise<boolean> {
   return true;
 }
 
-function format_timetable(timetable: WebAPITimetable[]): Lesson[] {
-  let nice_timetable: Lesson[] = [];
+function filter_cancelled_lessons(timetable: WebAPITimetable[]): Lesson[] {
+  let cancelled_lessons: Lesson[] = [];
 
   for (const lesson of timetable) {
-    let nice_lesson: Lesson = {
-      id: lesson.id,
-      name: lesson.subjects[0].element.longName ?? "missingno",
-      date: create_date_from_untis_date(lesson.date, lesson.startTime),
-      cancelled: false,
-    };
     // Ignore this error, it's a bug in the typings
     if (
       (lesson.is.cancelled ?? false) ||
       lesson.teachers[0].element.name === "---"
     ) {
-      nice_lesson.cancelled = true;
-    }
+      let cancelled_lesson: Lesson = {
+        name: lesson.subjects[0].element.longName ?? "missingno",
+        date: date_from_untis_date(lesson.date, lesson.startTime).getTime(),
+      };
 
-    nice_timetable.push(nice_lesson);
+      cancelled_lessons.push(cancelled_lesson);
+    }
   }
 
-  return nice_timetable;
+  return cancelled_lessons;
 }
 
-function create_date_from_untis_date(
+function date_from_untis_date(
   untis_date: number,
   untis_time: number
 ): Date {

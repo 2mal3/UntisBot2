@@ -1,7 +1,11 @@
 import { Database } from "bun:sqlite";
 import { log } from "logging";
 import { Lesson, User } from "types";
-import { get_school_from_name, get_timetable, check_credentials } from "untis";
+import {
+  get_school_from_name,
+  get_canceled_lessons,
+  check_credentials,
+} from "untis";
 import { v4 as uuid4 } from "uuid";
 
 export async function user_login(
@@ -35,105 +39,55 @@ export async function user_login(
 
   // Add the user to the database
   db.query(
-    "INSERT INTO users (id, untis_username, untis_password, untis_school_name, untis_server, timetable, discord_user_id) VALUES ($id, $untis_username, $untis_password, $untis_school_name, $untis_server, $timetable, $discord_user_id)"
+    "INSERT INTO users (id, untis_username, untis_password, untis_school_name, untis_server, discord_user_id) VALUES ($id, $untis_username, $untis_password, $untis_school_name, $untis_server, $discord_user_id)"
   ).run({
     $id: uuid4(),
     $untis_username: user.untis_username,
     $untis_password: user.untis_password,
     $untis_school_name: user.untis_school_name,
     $untis_server: user.untis_server,
-    $timetable: "[]",
     $discord_user_id: user.discord_user_id,
   });
 
   return { success: true, message: "" };
 }
 
-// Loops thought the timetable by index and prints out every lesson where the cancelled status has changed
-export function filter_cancelled_lessons(
-  new_timetable: Lesson[],
-  old_timetable: Lesson[]
-): Lesson[] {
-  let cancelled_lessons: Lesson[] = [];
-
-  for (let i = 0; i < new_timetable.length; i++) {
-    if (
-      new_timetable[i].date.getTime() === old_timetable[i].date.getTime() &&
-      new_timetable[i].cancelled &&
-      new_timetable[i].cancelled !== old_timetable[i].cancelled
-    ) {
-      cancelled_lessons.push(new_timetable[i]);
-    }
-  }
-
-  return cancelled_lessons;
-}
-
-interface LessonImport {
-  id: number;
-  name: string;
-  date: string; // This is a string because it is parsed from JSON
-  cancelled: boolean;
-}
-
-export async function get_cancelled_lessons(
+export async function get_new_cancelled_lessons(
   db: Database,
   user: User
 ): Promise<Lesson[]> {
-  const new_timetable = await get_timetable(user);
+  // Get all canceled lessons this week
+  const canceled_lessons = await get_canceled_lessons(user);
 
-  // Create timetable if it doesn't exist
-  const current_unformatted_timetable = JSON.parse(
-    user.timetable
-  ) as LessonImport[];
-  const current_timetable: Lesson[] = current_unformatted_timetable.map((l) => {
-    return {
-      id: l.id,
-      name: l.name,
-      date: new Date(l.date),
-      cancelled: l.cancelled,
-    };
-  });
-  if (
-    current_timetable.length === 0 || // No timetable - run after first login
-    current_timetable[0].date !== new_timetable[0].date // Timetable is from the last week
-  ) {
-    log.debug(
-      `${user.untis_username}: No up to date timetable exists, creating it ...`
-    );
+  // Get all saved canceled lessons
+  const saved_lessons = db
+    .query("SELECT * FROM cancelled_lessons WHERE user = $user")
+    .all({ $user: user.id }) as Lesson[];
 
-    db.query("UPDATE users SET timetable = $timetable WHERE id = $id").run({
-      $timetable: JSON.stringify(new_timetable),
-      $id: user.id,
+  // Find all canceled lessons that are not currently saved, using Bun.deepEquals
+  const new_canceled_lessons = canceled_lessons.filter(
+    (lesson) =>
+      db
+        .query(
+          "SELECT * FROM cancelled_lessons WHERE name = $name AND date = $date AND user = $user"
+        )
+        .all({
+          $name: lesson.name,
+          $date: lesson.date,
+          $user: user.id,
+        }).length === 0
+  );
+
+  // Save previously not saved lessons
+  for (const lesson of new_canceled_lessons) {
+    db.query(
+      "INSERT INTO cancelled_lessons (name, date, user) VALUES ($name, $date, $user)"
+    ).run({
+      $name: lesson.name,
+      $date: lesson.date,
+      $user: user.id,
     });
   }
 
-  // Get the old timetable from the database
-  const user_quarry = db.query("SELECT * FROM users WHERE id = $id").get({
-    $id: user.id,
-  }) as User;
-
-  const old_timetable = JSON.parse(
-    user_quarry.timetable,
-    (key: string, value: any) => {
-      if (key === "date") {
-        return new Date(value);
-      }
-      return value;
-    }
-  ) as Lesson[];
-
-  // Overwrite the old timetable with the new one
-  db.query("UPDATE users SET timetable = $timetable WHERE id = $id").run({
-    $timetable: JSON.stringify(new_timetable),
-    $id: user.id,
-  });
-
-  // Filter out the new cancelled lessons
-  const cancelled_lessons = filter_cancelled_lessons(
-    new_timetable,
-    old_timetable
-  );
-
-  return cancelled_lessons;
+  return new_canceled_lessons;
 }

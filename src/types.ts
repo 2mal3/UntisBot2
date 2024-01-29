@@ -1,8 +1,6 @@
 export interface Lesson {
-  id: number;
   name: string;
-  date: Date;
-  cancelled: boolean;
+  date: number;
 }
 
 export interface User {
@@ -11,6 +9,5 @@ export interface User {
   untis_password: string;
   untis_school_name: string;
   untis_server: string;
-  timetable: string;
   discord_user_id: string;
 }

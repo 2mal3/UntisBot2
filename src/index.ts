@@ -13,7 +13,7 @@ import {
 } from "discord.js";
 import { log } from "logging";
 import { Lesson, User } from "types";
-import { user_login, get_cancelled_lessons } from "logic";
+import { user_login, get_new_cancelled_lessons } from "logic";
 
 // Connect to the database
 log.debug("Connecting to database ...");
@@ -40,6 +40,10 @@ async function register_commands() {
     {
       name: "ping",
       description: "Replies with Pong!",
+    },
+    {
+      name: "test",
+      description: "Test command"
     },
     {
       name: "login",
@@ -99,6 +103,9 @@ bot.on("interactionCreate", async (interaction) => {
     await interaction.reply({ content: "Pong!", ephemeral: false });
   } else if (interaction.commandName == "login") {
     await on_user_login(interaction);
+  } else if (interaction.commandName == "test") {
+    await main();
+    await interaction.reply({ content: "Test!" });
   }
 });
 
@@ -115,7 +122,6 @@ async function on_user_login(interaction: ChatInputCommandInteraction) {
     untis_password: password,
     untis_school_name: school_name,
     untis_server: "",
-    timetable: "[]",
     discord_user_id: interaction.user.id,
   };
 
@@ -153,7 +159,7 @@ async function main() {
   const users = db.query("SELECT * FROM users").all() as User[];
   for (const user of users) {
     log.debug(`Checking timetable for "${user.untis_username}" ...`);
-    const cancelled_lessons = await get_cancelled_lessons(db, user);
+    const cancelled_lessons = await get_new_cancelled_lessons(db, user);
     await send_cancelled_lessons(cancelled_lessons, user.discord_user_id);
   }
 
@@ -187,16 +193,23 @@ async function send_cancelled_lessons(
 db.exec("PRAGMA journal_mode = WAL;");
 db.query(
   `CREATE TABLE IF NOT EXISTS "users" (
-	"id"	TEXT NOT NULL UNIQUE,
-	"untis_username"	TEXT NOT NULL,
-	"untis_password"	TEXT NOT NULL,
-	"untis_school_name"	TEXT NOT NULL,
-	"untis_server"	TEXT NOT NULL,
-	"timetable"	TEXT NOT NULL,
-	"discord_user_id"	TEXT NOT NULL,
-	PRIMARY KEY("id")
-);`
+    "id"	              TEXT NOT NULL UNIQUE,
+    "untis_username"	  TEXT NOT NULL,
+    "untis_password"	  TEXT NOT NULL,
+    "untis_school_name"	TEXT NOT NULL,
+    "untis_server"	    TEXT NOT NULL,
+    "discord_user_id"	  TEXT NOT NULL,
+    PRIMARY KEY("id")
+  );`
 ).run();
+db.query(
+  `CREATE TABLE IF NOT EXISTS "cancelled_lessons" (
+    "name"  TEXT NOT NULL,
+    "date"  NUMBER NOT NULL,
+    "user"  TEXT NOT NULL,
+    PRIMARY KEY("name", "date", "user")
+  );`
+).run()
 
 await register_commands();
 bot.login(process.env.DISCORD_TOKEN);
