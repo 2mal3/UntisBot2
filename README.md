@@ -9,7 +9,7 @@ A Discord bot that uses your school's WebUntis API to automatically notify you o
 - `DISCORD_APPLICATION_ID`: the application id of the Discord bot
 - `TZ`: your time zone e.g. "America/New_York"
 
-## Libraries Used
+## Main Libraries Used
 
 - [discord.js](https://www.npmjs.com/package/discord.js): interaction with the Discord API
 - [webuntis](https://www.npmjs.com/package/webuntis): interaction with the WebUntis API
