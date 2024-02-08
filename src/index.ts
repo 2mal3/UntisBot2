@@ -11,8 +11,10 @@ import {
   ChatInputCommandInteraction,
   ActivityType,
 } from "discord.js";
+
 import { log } from "logging";
 import { Lesson, User } from "types";
+import { fetchAndDecodeQR } from "utils";
 import { user_login, get_new_cancelled_lessons } from "logic";
 
 // Connect to the database
@@ -43,7 +45,7 @@ async function register_commands() {
     },
     {
       name: "login",
-      description: "Login with your Untis credentials",
+      description: "Login with your Untis password and username",
       options: [
         {
           name: "username",
@@ -58,11 +60,23 @@ async function register_commands() {
           type: 3,
         },
         {
-          name: "school_name",
+          name: "school-name",
           description: "Your school name",
           required: true,
           type: 3,
           min_length: 3,
+        },
+      ],
+    },
+    {
+      name: "qr-login",
+      description: "Login with your Untis QR code",
+      options: [
+        {
+          name: "qr-code",
+          description: "A picture of your Untis QR code",
+          required: true,
+          type: 11,
         },
       ],
     },
@@ -98,16 +112,114 @@ bot.on("interactionCreate", async (interaction) => {
   if (interaction.commandName == "ping") {
     await interaction.reply({ content: "Pong!", ephemeral: false });
   } else if (interaction.commandName == "login") {
-    await on_user_login(interaction);
+    await on_user_login(interaction, normal_user_login_provider);
+  } else if (interaction.commandName == "qr-login") {
+    await on_user_login(interaction, qr_user_login_provider);
   }
 });
 
-async function on_user_login(interaction: ChatInputCommandInteraction) {
+async function on_user_login(
+  interaction: ChatInputCommandInteraction,
+  provider: (interaction: ChatInputCommandInteraction) => Promise<{
+    user: User | null;
+    error: string | null;
+  }>
+) {
   await interaction.deferReply({ ephemeral: true });
 
+  // Get the user type and return with error if the user is not valid
+  const user_error = await provider(interaction);
+  if (user_error.error) {
+    log.warn(`${interaction.user.id}: ${user_error.error}`);
+    await interaction.editReply(user_error.error);
+    return;
+  }
+  const user: User = user_error.user!;
+
+  log.info(
+    `User "${user.untis_username}" from "${user.untis_school_name}" logging in ...`
+  );
+
+  // Test the provided credentials
+  const result = await user_login(db, user);
+  if (!result.success) {
+    log.warn(`${user.untis_username}: ${result.message}`);
+    await interaction.editReply(result.message);
+    return;
+  }
+
+  // When the user is successfully logged in
+  await interaction.editReply("Successfully logged in!");
+  log.info(`${user.untis_username}: Successfully logged in!`);
+
+  await set_user_count_activity();
+}
+
+async function qr_user_login_provider(
+  interaction: ChatInputCommandInteraction
+): Promise<{
+  user: User | null;
+  error: string | null;
+}> {
+  const discord_qr_data = interaction.options.getAttachment("qr-code");
+
+  if (!discord_qr_data) {
+    return {
+      user: null,
+      error: "Please provide a QR code!",
+    };
+  }
+
+  // Return error when the attachment is not an image
+  if (!discord_qr_data.contentType || !discord_qr_data.contentType.startsWith("image")) {
+    return {
+      user: null,
+      error: "Not an Image!",
+    };
+  }
+
+  // Get the attachment image from the provided URL
+  const untis_qr_data = await fetchAndDecodeQR(discord_qr_data.url);
+  if (!untis_qr_data) {
+    return {
+      user: null,
+      error: "Could not decode the QR code!",
+    };
+  }
+  log.debug(untis_qr_data)
+
+  // TODO: regex check for the qr code text to prevent wrong qr codes
+  const regex = /user=([^&]+)/;
+  const username = regex.exec(untis_qr_data)
+  if (!username || !username[1]) {
+    return {
+      user: null,
+      error: "Wrong QR code!",
+    };
+  }
+
+  const user: User = {
+    id: "",
+    untis_username: username[1],
+    untis_password: "",
+    untis_school_name: "",
+    untis_server: "",
+    untis_qr_data: untis_qr_data,
+    discord_user_id: interaction.user.id,
+  };
+
+  return { user: user, error: null };
+}
+
+function normal_user_login_provider(
+  interaction: ChatInputCommandInteraction
+): Promise<{
+  user: User | null;
+  error: string | null;
+}> {
   const username = interaction.options.getString("username") ?? "";
   const password = interaction.options.getString("password") ?? "";
-  const school_name = interaction.options.getString("school_name") ?? "";
+  const school_name = interaction.options.getString("school-name") ?? "";
 
   const user: User = {
     id: "",
@@ -115,21 +227,11 @@ async function on_user_login(interaction: ChatInputCommandInteraction) {
     untis_password: password,
     untis_school_name: school_name,
     untis_server: "",
+    untis_qr_data: "",
     discord_user_id: interaction.user.id,
   };
 
-  log.info(`User "${username}" from "${school_name}" logging in ...`);
-
-  const result = await user_login(db, user);
-  if (!result.success) {
-    log.warn(`${user.untis_username}: ${result.message}`);
-    await interaction.editReply(result.message);
-    return;
-  }
-  await interaction.editReply("Successfully logged in!");
-  log.info(`${user.untis_username}: Successfully logged in!`);
-
-  await set_user_count_activity();
+  return Promise.resolve({ user: user, error: null });
 }
 
 async function set_user_count_activity() {
@@ -191,6 +293,7 @@ db.query(
     "untis_password"	  TEXT NOT NULL,
     "untis_school_name"	TEXT NOT NULL,
     "untis_server"	    TEXT NOT NULL,
+    "untis_qr_data"     TEXT,
     "discord_user_id"	  TEXT NOT NULL,
     PRIMARY KEY("id")
   );`

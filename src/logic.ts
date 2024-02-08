@@ -1,11 +1,7 @@
 import { Database } from "bun:sqlite";
 import { log } from "logging";
 import { Lesson, User } from "types";
-import {
-  get_school_from_name,
-  get_canceled_lessons,
-  check_credentials,
-} from "untis";
+import { get_school_from_name, get_cancelled_lessons, check_credentials } from "untis";
 import { v4 as uuid4 } from "uuid";
 
 export async function user_login(
@@ -22,15 +18,20 @@ export async function user_login(
   }
 
   // Find the internal school name and the server url from the given school name
-  try {
-    const school = await get_school_from_name(user.untis_school_name);
-    user.untis_school_name = school.school_name;
-    user.untis_server = school.untis_server;
-  } catch (error) {
-    return { success: false, message: "No schools found for this school name" };
+  if (!user.untis_qr_data) {
+    try {
+      const school = await get_school_from_name(user.untis_school_name);
+      user.untis_school_name = school.school_name;
+      user.untis_server = school.untis_server;
+    } catch (error) {
+      return {
+        success: false,
+        message: "No schools found for this school name",
+      };
+    }
   }
 
-  log.debug(`School name is ${user.untis_school_name}`);
+  log.debug(`School name is "${user.untis_school_name}"`);
 
   // Check if the credentials are correct
   if (!(await check_credentials(user))) {
@@ -39,13 +40,14 @@ export async function user_login(
 
   // Add the user to the database
   db.query(
-    "INSERT INTO users (id, untis_username, untis_password, untis_school_name, untis_server, discord_user_id) VALUES ($id, $untis_username, $untis_password, $untis_school_name, $untis_server, $discord_user_id)"
+    "INSERT INTO users (id, untis_username, untis_password, untis_school_name, untis_server, untis_qr_data, discord_user_id) VALUES ($id, $untis_username, $untis_password, $untis_school_name, $untis_server, $untis_qr_data $discord_user_id)"
   ).run({
     $id: uuid4(),
     $untis_username: user.untis_username,
     $untis_password: user.untis_password,
     $untis_school_name: user.untis_school_name,
     $untis_server: user.untis_server,
+    $untis_qr_data: user.untis_qr_data,
     $discord_user_id: user.discord_user_id,
   });
 
@@ -57,7 +59,7 @@ export async function get_new_cancelled_lessons(
   user: User
 ): Promise<Lesson[]> {
   // Get all canceled lessons this week
-  const canceled_lessons = await get_canceled_lessons(user);
+  const canceled_lessons = await get_cancelled_lessons(user);
 
   // Find all canceled lessons that are not currently saved
   const new_canceled_lessons = canceled_lessons.filter(

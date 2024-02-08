@@ -16,6 +16,8 @@
   "dependencies": {
     "cron": "~2.4",
     "discord.js": "~14.13",
+    "jimp": "~0.22",
+    "jsqr": "~1.4",
     "tslog": "~4.9.2",
     "uuid": "~9.0",
     "webuntis": "~2.0.3"
