@@ -59,11 +59,6 @@ export async function get_new_cancelled_lessons(
   // Get all canceled lessons this week
   const canceled_lessons = await get_canceled_lessons(user);
 
-  // Get all saved canceled lessons
-  const saved_lessons = db
-    .query("SELECT * FROM cancelled_lessons WHERE user = $user")
-    .all({ $user: user.id }) as Lesson[];
-
   // Find all canceled lessons that are not currently saved
   const new_canceled_lessons = canceled_lessons.filter(
     (lesson) =>
