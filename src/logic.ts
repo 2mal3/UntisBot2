@@ -40,7 +40,7 @@ export async function user_login(
 
   // Add the user to the database
   db.query(
-    "INSERT INTO users (id, untis_username, untis_password, untis_school_name, untis_server, untis_qr_data, discord_user_id) VALUES ($id, $untis_username, $untis_password, $untis_school_name, $untis_server, $untis_qr_data $discord_user_id)"
+    "INSERT INTO users (id, untis_username, untis_password, untis_school_name, untis_server, untis_qr_data, discord_user_id) VALUES ($id, $untis_username, $untis_password, $untis_school_name, $untis_server, $untis_qr_data, $discord_user_id)"
   ).run({
     $id: uuid4(),
     $untis_username: user.untis_username,
