@@ -8,7 +8,8 @@ A Discord bot that uses your school's WebUntis API to automatically notify you o
 
 ## Commands
 
-- `/login <username> <password> <school name>`: Log in to the system to receive notifications.
+- `/login <username> <password> <school name>`: Log in to the system with normal username and password.
+- `/qr-login <qr-code>`: Log in to the system with an Untis qr-code.
 - `/ping`: Pong
 
 ## Environment Variables
