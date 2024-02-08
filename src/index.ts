@@ -186,7 +186,6 @@ async function qr_user_login_provider(
       error: "Could not decode the QR code!",
     };
   }
-  log.debug(untis_qr_data)
 
   // TODO: regex check for the qr code text to prevent wrong qr codes
   const regex = /user=([^&]+)/;

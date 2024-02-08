@@ -31,8 +31,6 @@ export async function user_login(
     }
   }
 
-  log.debug(`School name is "${user.untis_school_name}"`);
-
   // Check if the credentials are correct
   if (!(await check_credentials(user))) {
     return { success: false, message: "Bad credentials" };
