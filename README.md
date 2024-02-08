@@ -1,4 +1,5 @@
 # untisbot2
+
 [GitHub](https://github.com/2mal3/UntisBot2) • [DockerHub](https://hub.docker.com/r/2mal3/untisbot2)
 
 A Discord bot that uses your school's WebUntis API to automatically notify you of cancelled classes.
