@@ -1,30 +1,24 @@
 import { WebAPITimetable, WebUntis, WebUntisQR } from "webuntis";
-import { URL } from "url"
-import { authenticator as Authenticator } from "otplib"
+import { URL } from "url";
+import { authenticator as Authenticator } from "otplib";
 import { log } from "logging";
 import { Lesson, User } from "types";
 
-
 function getUntisObject(user: User): WebUntis {
   if (user.untis_qr_data) {
-    log.debug("Using QR code login")
+    log.debug("Using QR code login");
 
     // FIXME: problem with bun
-    return new WebUntisQR(
-      user.untis_qr_data,
-      "UntisBot",
-      Authenticator,
-      URL
-    )
+    return new WebUntisQR(user.untis_qr_data, "UntisBot", Authenticator, URL);
   }
 
-  log.debug("Using normal login")
+  log.debug("Using normal login");
   return new WebUntis(
     user.untis_school_name,
     user.untis_username,
     user.untis_password,
     user.untis_server
-  )
+  );
 }
 
 export async function get_cancelled_lessons(user: User): Promise<Lesson[]> {
@@ -74,7 +68,7 @@ export async function check_credentials(user: User): Promise<boolean> {
     await untis.login();
     await untis.logout();
   } catch (error) {
-    log.error(error)
+    log.error(error);
     return false;
   }
 
@@ -102,10 +96,7 @@ function filter_cancelled_lessons(timetable: WebAPITimetable[]): Lesson[] {
   return cancelled_lessons;
 }
 
-function date_from_untis_date(
-  untis_date: number,
-  untis_time: number
-): Date {
+function date_from_untis_date(untis_date: number, untis_time: number): Date {
   const untis_date_string = untis_date.toString();
 
   const year = untis_date_string.slice(0, 4);

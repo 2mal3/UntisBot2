@@ -1,7 +1,11 @@
 import { Database } from "bun:sqlite";
 import { log } from "logging";
 import { Lesson, User } from "types";
-import { get_school_from_name, get_cancelled_lessons, check_credentials } from "untis";
+import {
+  get_school_from_name,
+  get_cancelled_lessons,
+  check_credentials,
+} from "untis";
 import { v4 as uuid4 } from "uuid";
 
 export async function user_login(

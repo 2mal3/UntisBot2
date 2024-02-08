@@ -171,7 +171,10 @@ async function qr_user_login_provider(
   }
 
   // Return error when the attachment is not an image
-  if (!discord_qr_data.contentType || !discord_qr_data.contentType.startsWith("image")) {
+  if (
+    !discord_qr_data.contentType ||
+    !discord_qr_data.contentType.startsWith("image")
+  ) {
     return {
       user: null,
       error: "Not an Image!",
@@ -189,7 +192,7 @@ async function qr_user_login_provider(
 
   // TODO: regex check for the qr code text to prevent wrong qr codes
   const regex = /user=([^&]+)/;
-  const username = regex.exec(untis_qr_data)
+  const username = regex.exec(untis_qr_data);
   if (!username || !username[1]) {
     return {
       user: null,
@@ -304,7 +307,7 @@ db.query(
     "user"  TEXT NOT NULL,
     PRIMARY KEY("name", "date", "user")
   );`
-).run()
+).run();
 
 await register_commands();
 bot.login(process.env.DISCORD_TOKEN);

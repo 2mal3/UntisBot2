@@ -1,7 +1,6 @@
 import Jimp from "jimp";
 import jsQr from "jsqr";
 
-
 export async function fetchAndDecodeQR(url: string): Promise<string | null> {
   if (!url) {
     return null;
