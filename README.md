@@ -1,7 +1,5 @@
 # untisbot2
 
-[GitHub](https://github.com/2mal3/UntisBot2) • [DockerHub](https://hub.docker.com/r/2mal3/untisbot2)
-
 A Discord bot that uses your school's WebUntis API to automatically notify you of cancelled classes. The bot checks for cancelled classes every 5 minutes on weekdays from 7-8 am by default.
 
 **The notifications come as a direct message. You may need to allow server members or new bots to send you DMs in Discord.**
