@@ -1,20 +1,16 @@
-FROM oven/bun:1.0 AS run
+FROM oven/bun:1.2 AS run
 
 LABEL author="2mal3"
 LABEL github="https://github.com/2mal3/UntisBot2"
 
 WORKDIR /app
 
-RUN mkdir database
-
 COPY package.json bun.lockb ./
 RUN bun install --production
 
-COPY tsconfig.json docker-entrypoint.sh ./
-
-COPY tests/ tests/
+COPY tsconfig.json ./
 COPY src/ src/
 
-RUN chmod +x docker-entrypoint.sh
+VOLUME "/app/database"
 
-ENTRYPOINT ./docker-entrypoint.sh
+ENTRYPOINT bun serve
