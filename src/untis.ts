@@ -17,7 +17,7 @@ function getUntisObject(user: User): WebUntis {
     user.untis_school_name,
     user.untis_username,
     user.untis_password,
-    user.untis_server
+    user.untis_server,
   );
 }
 
@@ -34,7 +34,7 @@ export async function get_cancelled_lessons(user: User): Promise<Lesson[]> {
 // Get the untis internal school name and the server url
 // from the school search on the webuntis website
 export async function get_school_from_name(
-  name: string
+  name: string,
 ): Promise<{ school_name: string; untis_server: string }> {
   const response = await fetch("https://mobile.webuntis.com/ms/schoolquery2", {
     method: "POST",

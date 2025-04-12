@@ -10,7 +10,7 @@ export async function fetchAndDecodeQR(url: string): Promise<string | null> {
   const decodedQR = jsQr(
     new Uint8ClampedArray(imageData.bitmap.data.buffer),
     imageData.bitmap.width,
-    imageData.bitmap.height
+    imageData.bitmap.height,
   );
 
   if (!decodedQR) {

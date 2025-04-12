@@ -83,7 +83,7 @@ async function register_commands() {
   ];
 
   const rest = new REST({ version: "10" }).setToken(
-    Bun.env.DISCORD_TOKEN ?? ""
+    Bun.env.DISCORD_TOKEN ?? "",
   );
 
   try {
@@ -91,7 +91,7 @@ async function register_commands() {
 
     await rest.put(
       Routes.applicationCommands(Bun.env.DISCORD_APPLICATION_ID ?? ""),
-      { body: commands }
+      { body: commands },
     );
 
     log.debug("Successfully reloaded application (/) commands.");
@@ -123,7 +123,7 @@ async function on_user_login(
   provider: (interaction: ChatInputCommandInteraction) => Promise<{
     user: User | null;
     error: string | null;
-  }>
+  }>,
 ) {
   await interaction.deferReply({ ephemeral: true });
 
@@ -137,7 +137,7 @@ async function on_user_login(
   const user: User = user_error.user!;
 
   log.info(
-    `User "${user.untis_username}" from "${user.untis_school_name}" logging in ...`
+    `User "${user.untis_username}" from "${user.untis_school_name}" logging in ...`,
   );
 
   // Test the provided credentials
@@ -156,7 +156,7 @@ async function on_user_login(
 }
 
 async function qr_user_login_provider(
-  interaction: ChatInputCommandInteraction
+  interaction: ChatInputCommandInteraction,
 ): Promise<{
   user: User | null;
   error: string | null;
@@ -214,7 +214,7 @@ async function qr_user_login_provider(
 }
 
 function normal_user_login_provider(
-  interaction: ChatInputCommandInteraction
+  interaction: ChatInputCommandInteraction,
 ): Promise<{
   user: User | null;
   error: string | null;
@@ -244,7 +244,7 @@ async function set_user_count_activity() {
     `${user_amount} timetables | v${process.env.npm_package_version}`,
     {
       type: ActivityType.Watching,
-    }
+    },
   );
 
   log.debug("Set user count activity!");
@@ -267,7 +267,7 @@ async function main() {
 
 async function send_cancelled_lessons(
   cancelled_lessons: Lesson[],
-  user_id: string
+  user_id: string,
 ) {
   // Loops through every lesson and sends a message to the channel
   for (const lesson of cancelled_lessons) {
@@ -282,7 +282,7 @@ async function send_cancelled_lessons(
 
     await bot.users.send(
       user_id,
-      `The lesson **${lesson.name}** on **${lesson_date}** at **${lesson_time}** has been cancelled.`
+      `The lesson **${lesson.name}** on **${lesson_date}** at **${lesson_time}** has been cancelled.`,
     );
   }
 }
@@ -298,7 +298,7 @@ db.query(
     "untis_qr_data"     TEXT,
     "discord_user_id"	  TEXT NOT NULL,
     PRIMARY KEY("id")
-  );`
+  );`,
 ).run();
 db.query(
   `CREATE TABLE IF NOT EXISTS "cancelled_lessons" (
@@ -306,7 +306,7 @@ db.query(
     "date"  NUMBER NOT NULL,
     "user"  TEXT NOT NULL,
     PRIMARY KEY("name", "date", "user")
-  );`
+  );`,
 ).run();
 
 await register_commands();
@@ -319,5 +319,5 @@ const job = new CronJob(
   },
   null,
   true,
-  Bun.env.TZ
+  Bun.env.TZ,
 );

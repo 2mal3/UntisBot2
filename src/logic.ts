@@ -10,7 +10,7 @@ import { v4 as uuid4 } from "uuid";
 
 export async function user_login(
   db: Database,
-  user: User
+  user: User,
 ): Promise<{ success: boolean; message: any }> {
   // Skip if the user is already logged in
   if (
@@ -42,7 +42,7 @@ export async function user_login(
 
   // Add the user to the database
   db.query(
-    "INSERT INTO users (id, untis_username, untis_password, untis_school_name, untis_server, untis_qr_data, discord_user_id) VALUES ($id, $untis_username, $untis_password, $untis_school_name, $untis_server, $untis_qr_data, $discord_user_id)"
+    "INSERT INTO users (id, untis_username, untis_password, untis_school_name, untis_server, untis_qr_data, discord_user_id) VALUES ($id, $untis_username, $untis_password, $untis_school_name, $untis_server, $untis_qr_data, $discord_user_id)",
   ).run({
     $id: uuid4(),
     $untis_username: user.untis_username,
@@ -58,7 +58,7 @@ export async function user_login(
 
 export async function get_new_cancelled_lessons(
   db: Database,
-  user: User
+  user: User,
 ): Promise<Lesson[]> {
   // Get all canceled lessons this week
   const canceled_lessons = await get_cancelled_lessons(user);
@@ -68,19 +68,19 @@ export async function get_new_cancelled_lessons(
     (lesson) =>
       db
         .query(
-          "SELECT * FROM cancelled_lessons WHERE name = $name AND date = $date AND user = $user"
+          "SELECT * FROM cancelled_lessons WHERE name = $name AND date = $date AND user = $user",
         )
         .all({
           $name: lesson.name,
           $date: lesson.date,
           $user: user.id,
-        }).length === 0
+        }).length === 0,
   );
 
   // Save previously not saved lessons
   for (const lesson of new_canceled_lessons) {
     db.query(
-      "INSERT INTO cancelled_lessons (name, date, user) VALUES ($name, $date, $user)"
+      "INSERT INTO cancelled_lessons (name, date, user) VALUES ($name, $date, $user)",
     ).run({
       $name: lesson.name,
       $date: lesson.date,
