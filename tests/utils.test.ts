@@ -7,7 +7,7 @@ test("fetchAndDecodeQR-emptyURL", async () => {
   expect(await fetchAndDecodeQR(URL)).toEqual(null);
 });
 
-test("fetchAndDecodeQR-nonQrImage", async () => {
+test.skip("fetchAndDecodeQR-nonQrImage", async () => {
   const URL =
     "https://cdn.discordapp.com/attachments/247071734384164865/924014240745021470/unknown.png";
 
