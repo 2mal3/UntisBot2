@@ -1,5 +1,4 @@
 import { Database } from "bun:sqlite";
-import { log } from "logging";
 import { Lesson, User } from "types";
 import {
   get_school_from_name,

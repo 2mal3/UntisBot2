@@ -80,6 +80,11 @@ async function register_commands() {
         },
       ],
     },
+    {
+      name: "logout",
+      description:
+        "Remove your account from the app. You won't receive any notifications anymore.",
+    },
   ];
 
   const rest = new REST({ version: "10" }).setToken(
@@ -115,8 +120,42 @@ bot.on("interactionCreate", async (interaction) => {
     await on_user_login(interaction, normal_user_login_provider);
   } else if (interaction.commandName == "qr-login") {
     await on_user_login(interaction, qr_user_login_provider);
+  } else if (interaction.commandName == "logout") {
+    await on_user_logout(interaction);
   }
 });
+
+async function on_user_logout(interaction: ChatInputCommandInteraction) {
+  const discordUserId = interaction.user.id;
+
+  // check if user in in database
+  const userExistsQuery = db.query(
+    "SELECT id FROM users WHERE discord_user_id = $discordUserId",
+  );
+  const userExists =
+    userExistsQuery.all({ $discordUserId: discordUserId }).length === 0;
+
+  if (!userExists) {
+    await interaction.reply({
+      content: "You are not logged in!",
+      ephemeral: true,
+    });
+    return;
+  }
+
+  // remove user from the database
+  db.query("DELETE FROM users WHERE discod_user_id = $discordUserId").run({
+    $discordUserId: discordUserId,
+  });
+
+  // send confirmation message
+  await interaction.reply({
+    content: "Successfully logged out!",
+    ephemeral: true,
+  });
+
+  await set_user_count_activity();
+}
 
 async function on_user_login(
   interaction: ChatInputCommandInteraction,
@@ -236,6 +275,7 @@ function normal_user_login_provider(
   return Promise.resolve({ user: user, error: null });
 }
 
+/** Updates the Discord Bots activity status to display the current number of users. */
 async function set_user_count_activity() {
   log.debug("Setting user count activity ...");
 
