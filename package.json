@@ -7,19 +7,19 @@
     "serve": "bun src/index.ts"
   },
   "devDependencies": {
-    "@types/uuid": "^9.0.4",
+    "@types/uuid": "^9.0.8",
     "bun-types": "latest"
   },
   "peerDependencies": {
-    "typescript": "^5.0.0"
+    "typescript": "^5.3.3"
   },
   "dependencies": {
-    "cron": "~2.4",
-    "discord.js": "~14.13",
-    "jimp": "~0.22",
-    "jsqr": "~1.4",
-    "tslog": "~4.9.2",
-    "uuid": "~9.0",
-    "webuntis": "~2.0.3"
+    "cron": "^2.4.4",
+    "discord.js": "^14.18.0",
+    "jimp": "~0.22.12",
+    "jsqr": "^1.4.0",
+    "tslog": "^4.9.3",
+    "uuid": "^9.0.1",
+    "webuntis": "^2.2.1"
   }
 }
